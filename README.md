@@ -60,6 +60,8 @@ Note: unlike Signal K itself, the log entries are written using "human-friendly"
 
 It is a good idea to set up automatic backups of these files off the vessel, for example to [GitHub](https://github.com) or some other cloud storage service. How to handle this backup is out of the scope of this plugin.
 
+For making a hard copy of the logbook, the [logbook-printer](https://github.com/meri-imperiumi/logbook-printer) repository implements a service to do so with a cheap receipt printer.
+
 ## Source data
 
 The following SignalK paths are used by this logbook.

@@ -4,6 +4,7 @@ import {
   Button,
 } from 'reactstrap';
 import { Point } from 'where';
+import { FaExclamationTriangle } from 'react-icons/fa';
 
 function getWeather(entry) {
   const weather = [];
@@ -81,7 +82,14 @@ function Logbook(props) {
             <td>{entry.position ? entry.position.source || 'GPS' : ''}</td>
             <td>{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : ''}</td>
             <td>{entry.engine && !Number.isNaN(Number(entry.engine.hours)) ? `${entry.engine.hours}h` : ''}</td>
-            <td>{entry.author || 'auto'}</td>
+            <td>
+              {entry.author || 'auto'}
+              {!entry.signatureValid && (
+                <span title="Logikirje on muudetud või rikutud" style={{ color: 'red', marginLeft: 4 }}>
+                  <FaExclamationTriangle />
+                </span>
+              )}
+            </td>
             <td>{entry.text}</td>
           </tr>
         ))}

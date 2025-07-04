@@ -51,6 +51,7 @@ module.exports = (app) => {
   const plugin = {};
   let unsubscribes = [];
   let interval;
+  let autoInterval;
 
   plugin.id = 'signalk-logbook';
   plugin.name = 'Logbook';
@@ -160,6 +161,22 @@ module.exports = (app) => {
       };
     }, 60000);
 
+    // Automaatne logikirje iga 5 minuti järel
+    autoInterval = setInterval(() => {
+      // Loome automaatse logikirje
+      const author = { name: 'Automatic', role: 'System' };
+      const entry = stateToEntry(state, 'Automaatne logikirje', author);
+      const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
+      log.appendEntry(dateString, entry)
+        .then(() => {
+          setStatus('Automaatne logikirje salvestatud');
+          app.debug && app.debug('Automatic log entry saved:', entry);
+        })
+        .catch((err) => {
+          app.setPluginError(`Automaatse logikirje salvestus ebaõnnestus: ${err.message}`);
+        });
+    }, 5 * 60 * 1000);
+
     app.registerPutHandler('vessels.self', 'communication.crewNames', (ctx, path, value, cb) => {
       if (!Array.isArray(value)) {
         return {
@@ -231,6 +248,11 @@ module.exports = (app) => {
     });
     router.post('/logs', (req, res) => {
       res.contentType('application/json');
+      const user = parseJwt(req.cookies.JAUTHENTICATION);
+      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+        res.sendStatus(403);
+        return;
+      }
       let stats;
       if (req.body.ago > buffer.size()) {
         // We don't have history that far, sadly
@@ -244,7 +266,7 @@ module.exports = (app) => {
           ...state,
         };
       }
-      const author = parseJwt(req.cookies.JAUTHENTICATION).id;
+      const author = { name: user.id, role: user.role || 'Crew' };
       const data = stateToEntry(stats, req.body.text, author);
       if (req.body.category) {
         data.category = req.body.category;
@@ -298,6 +320,11 @@ module.exports = (app) => {
     });
     router.put('/logs/:date/:entry', (req, res) => {
       res.contentType('application/json');
+      const user = parseJwt(req.cookies.JAUTHENTICATION);
+      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+        res.sendStatus(403);
+        return;
+      }
       if (req.params.entry.substr(0, 10) !== req.params.date) {
         res.sendStatus(404);
         return;
@@ -305,16 +332,22 @@ module.exports = (app) => {
       const entry = {
         ...req.body,
       };
-      const author = parseJwt(req.cookies.JAUTHENTICATION).id;
-      if (author && !entry.author) {
-        entry.author = author;
+      if (user && user.id && !entry.author) {
+        entry.author = { name: user.id, role: user.role || 'Crew' };
       }
+      if (!entry.audit) entry.audit = {};
+      entry.audit.modifiedAt = new Date().toISOString();
       log.writeEntry(entry)
         .then(() => {
           res.sendStatus(200);
         }, (e) => handleError(e, res));
     });
     router.delete('/logs/:date/:entry', (req, res) => {
+      const user = parseJwt(req.cookies.JAUTHENTICATION);
+      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+        res.sendStatus(403);
+        return;
+      }
       if (req.params.entry.substr(0, 10) !== req.params.date) {
         res.sendStatus(404);
         return;
@@ -330,6 +363,7 @@ module.exports = (app) => {
     unsubscribes.forEach((f) => f());
     unsubscribes = [];
     clearInterval(interval);
+    clearInterval(autoInterval);
   };
 
   plugin.schema = {

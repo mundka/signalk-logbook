@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function rad2deg(rad) {
   return Math.round((rad * 180) / Math.PI);
 }
@@ -7,10 +9,27 @@ function ms2kt(ms) {
 }
 
 module.exports = function stateToEntry(state, text, author = '') {
+  const now = new Date().toISOString();
+  let authorObj = { name: '', role: 'Crew' };
+  if (typeof author === 'string') {
+    authorObj.name = author;
+  } else if (author && typeof author === 'object') {
+    authorObj = author;
+  }
   const data = {
-    datetime: state['navigation.datetime'] || new Date().toISOString(),
+    datetime: state['navigation.datetime'] || now,
     text,
-    author,
+    author: authorObj,
+    audit: {
+      createdAt: now,
+      modifiedAt: null,
+    },
+    vesselState: state['navigation.state'] || null,
+    environment: {
+      temperature: state['environment.outside.temperature'] || null,
+      windSpeed: state['environment.wind.speedApparent'] || null,
+      barometricPressure: state['environment.outside.pressure'] || null,
+    },
   };
   if (state['navigation.position']) {
     data.position = {
@@ -46,27 +65,6 @@ module.exports = function stateToEntry(state, text, author = '') {
     && !Number.isNaN(Number(state['navigation.courseRhumbline.nextPoint.position'].latitude))) {
     data.waypoint = state['navigation.courseRhumbline.nextPoint.position'];
   }
-  if (!Number.isNaN(Number(state['environment.outside.pressure']))) {
-    data.barometer = parseFloat((state['environment.outside.pressure'] / 100).toFixed(2));
-  }
-  if (!Number.isNaN(Number(state['environment.wind.speedOverGround']))) {
-    if (!data.wind) {
-      data.wind = {};
-    }
-    data.wind.speed = ms2kt(state['environment.wind.speedOverGround']);
-  }
-  if (!Number.isNaN(Number(state['environment.wind.directionTrue']))) {
-    if (!data.wind) {
-      data.wind = {};
-    }
-    data.wind.direction = rad2deg(state['environment.wind.directionTrue']);
-  }
-  if (!Number.isNaN(Number(state['environment.water.swell.state']))) {
-    if (!data.observations) {
-      data.observations = {};
-    }
-    data.observations.seaState = state['environment.water.swell.state'];
-  }
   if (!Number.isNaN(Number(state['environment.outside.cloudCoverage']))) {
     if (!data.observations) {
       data.observations = {};
@@ -96,5 +94,8 @@ module.exports = function stateToEntry(state, text, author = '') {
   if (state['communication.crewNames']) {
     data.crewNames = state['communication.crewNames'];
   }
+  const hashData = { ...data };
+  const hash = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
+  data.signature = hash;
   return data;
 };

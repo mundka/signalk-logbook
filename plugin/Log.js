@@ -8,6 +8,7 @@ const { join, basename } = require('path');
 const { parse, stringify } = require('yaml');
 const { Validator } = require('jsonschema');
 const openAPI = require('../schema/openapi.json');
+const crypto = require('crypto');
 
 class Log {
   constructor(dir) {
@@ -24,7 +25,7 @@ class Log {
   }
 
   getDate(date) {
-    if (!date.match(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/)) {
+    if (!date.match(/^[\d]{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/)) {
       return Promise.reject(new Error('Invalid date format'));
     }
     const path = this.getPath(date);
@@ -41,11 +42,16 @@ class Log {
           if (valid.errors.length > 0) {
             return Promise.reject(valid.errors[0]);
           }
-          return data.map((entry) => ({
-            ...entry,
-            category: entry.category || 'navigation',
-            datetime: new Date(entry.datetime),
-          }));
+          return data.map((entry) => {
+            const { signature, ...hashData } = entry;
+            const hash = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
+            return {
+              ...entry,
+              signatureValid: signature === hash,
+              category: entry.category || 'navigation',
+              datetime: new Date(entry.datetime),
+            };
+          });
         }));
   }
 
@@ -60,8 +66,11 @@ class Log {
           err.code = 'ENOENT';
           return Promise.reject(err);
         }
+        const { signature, ...hashData } = entry;
+        const hash = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
         return {
           ...entry,
+          signatureValid: signature === hash,
           category: entry.category || 'navigation',
           datetime: new Date(entry.datetime),
         };

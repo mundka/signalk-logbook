@@ -113,10 +113,14 @@ class Log {
           ...entry,
           datetime: new Date(entry.datetime),
         };
+        // Find all entries with the same datetime
+        const matches = date.filter((e) => e.datetime.toISOString() === datetimeString);
+        if (matches.length > 1) {
+          console.warn(`[Logbook] Warning: Multiple entries with the same datetime (${datetimeString}) found. Only the first will be updated.`);
+        }
         const idx = date.findIndex((e) => e.datetime.toISOString() === datetimeString);
         const updatedDate = [...date];
         if (idx === -1) {
-          // TODO: Would it be better to fail here?
           updatedDate.push(normalized);
         } else {
           updatedDate[idx] = normalized;
@@ -138,6 +142,11 @@ class Log {
           ...data,
           datetime: new Date(data.datetime),
         };
+        // Prevent duplicate entries with the same datetime
+        const exists = d.some((e) => e.datetime.toISOString() === normalized.datetime.toISOString());
+        if (exists) {
+          throw new Error(`[Logbook] Duplicate entry: An entry with datetime ${normalized.datetime.toISOString()} already exists.`);
+        }
         d.push(normalized);
         return this.writeDate(date, d);
       });

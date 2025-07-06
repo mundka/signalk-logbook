@@ -56,7 +56,7 @@ module.exports = (app) => {
   plugin.id = 'signalk-logbook';
   plugin.name = 'Logbook';
   plugin.description = 'Semi-automatic electronic logbook for sailing vessels';
-  plugin.version = '1.0.2';
+  plugin.version = '1.0.3';
 
   const setStatus = app.setPluginStatus || app.setProviderStatus;
 

@@ -103,6 +103,7 @@ function AppPanel(props) {
     };
     delete savingEntry.point;
     delete savingEntry.date;
+    delete savingEntry.signatureValid;
     fetch(`/plugins/signalk-logbook/logs/${dateString}/${entry.datetime}`, {
       method: 'PUT',
       headers: {
@@ -133,6 +134,7 @@ function AppPanel(props) {
     const savingEntry = {
       ...entry,
     };
+    delete savingEntry.signatureValid;
     fetch('/plugins/signalk-logbook/logs', {
       method: 'POST',
       headers: {

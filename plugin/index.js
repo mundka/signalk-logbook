@@ -168,9 +168,13 @@ module.exports = (app) => {
     // Automaatne logikirje iga 5 minuti järel
     if (enableAutoLogging) {
       autoInterval = setInterval(() => {
+        // Always use the current time for a unique datetime
+        const now = new Date();
         const author = { name: 'Automatic', role: 'System' };
-        const entry = stateToEntry(state, 'Automatic log entry', author);
-        const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
+        // Clone the current state and set a unique datetime
+        const entryState = { ...state, 'navigation.datetime': now.toISOString() };
+        const entry = stateToEntry(entryState, 'Automatic log entry', author);
+        const dateString = now.toISOString().substr(0, 10);
         if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
         else app.error('[AUTO] About to save automatic log entry:', entry);
         log.appendEntry(dateString, entry)
@@ -276,6 +280,10 @@ module.exports = (app) => {
         };
       }
       const author = { name: user.id, role: user.role || 'Crew' };
+      // If user did not provide a datetime, use current time for uniqueness
+      if (!stats['navigation.datetime']) {
+        stats['navigation.datetime'] = new Date().toISOString();
+      }
       let data = stateToEntry(stats, req.body.text, author);
       if (req.body.category) {
         data.category = req.body.category;

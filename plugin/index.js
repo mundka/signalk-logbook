@@ -272,7 +272,9 @@ module.exports = (app) => {
         };
       }
       const author = { name: user.id, role: user.role || 'Crew' };
-      const data = stateToEntry(stats, req.body.text, author);
+      // Create the automatic log entry object
+      let data = stateToEntry(stats, req.body.text, author);
+      // Merge user-provided fields (overwrites automatic if present)
       if (req.body.category) {
         data.category = req.body.category;
       } else {
@@ -298,6 +300,14 @@ module.exports = (app) => {
         };
         // TODO: Send delta on manually entered position?
       }
+      // Merge other possible fields (e.g. log, engine, waypoint, barometer, wind, vhf, crewNames)
+      ["log", "engine", "waypoint", "barometer", "wind", "vhf", "crewNames"].forEach((key) => {
+        if (req.body[key]) data[key] = req.body[key];
+      });
+      // Update signature after all changes
+      const { signature, ...hashData } = data;
+      const crypto = require('crypto');
+      data.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       const dateString = new Date(data.datetime).toISOString().substr(0, 10);
       log.appendEntry(dateString, data)
         .then(() => {

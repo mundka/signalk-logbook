@@ -263,7 +263,7 @@ module.exports = (app) => {
     router.post('/logs', (req, res) => {
       res.contentType('application/json');
       const user = parseJwt(req.cookies.JAUTHENTICATION);
-      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+      if (!user || !user.id) {
         res.sendStatus(403);
         return;
       }
@@ -351,7 +351,7 @@ module.exports = (app) => {
     router.put('/logs/:date/:entry', (req, res) => {
       res.contentType('application/json');
       const user = parseJwt(req.cookies.JAUTHENTICATION);
-      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+      if (!user || !user.id) {
         res.sendStatus(403);
         return;
       }
@@ -374,7 +374,7 @@ module.exports = (app) => {
     });
     router.delete('/logs/:date/:entry', (req, res) => {
       const user = parseJwt(req.cookies.JAUTHENTICATION);
-      if (!user || !user.id || !user.role || !['Captain', 'Officer'].includes(user.role)) {
+      if (!user || !user.id) {
         res.sendStatus(403);
         return;
       }

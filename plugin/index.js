@@ -56,6 +56,7 @@ module.exports = (app) => {
   plugin.id = 'signalk-logbook';
   plugin.name = 'Logbook';
   plugin.description = 'Semi-automatic electronic logbook for sailing vessels';
+  plugin.version = '1.0.1';
 
   const setStatus = app.setPluginStatus || app.setProviderStatus;
 
@@ -167,17 +168,21 @@ module.exports = (app) => {
     // Automaatne logikirje iga 5 minuti järel
     if (enableAutoLogging) {
       autoInterval = setInterval(() => {
-        // Loome automaatse logikirje
         const author = { name: 'Automatic', role: 'System' };
-        const entry = stateToEntry(state, 'Automaatne logikirje', author);
+        const entry = stateToEntry(state, 'Automatic log entry', author);
         const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
+        if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
+        else app.error('[AUTO] About to save automatic log entry:', entry);
         log.appendEntry(dateString, entry)
           .then(() => {
-            setStatus('Automaatne logikirje salvestatud');
-            app.debug && app.debug('Automatic log entry saved:', entry);
+            setStatus('Automatic log entry saved');
+            if (app.debug) app.debug('[AUTO] Automatic log entry saved:', entry);
+            else app.error('[AUTO] Automatic log entry saved:', entry);
           })
           .catch((err) => {
-            app.setPluginError(`Automaatse logikirje salvestus ebaõnnestus: ${err.message}`);
+            app.setPluginError(`Automatic log entry failed: ${err.message}`);
+            if (app.debug) app.debug('[AUTO] Error saving automatic log entry:', err);
+            else app.error('[AUTO] Error saving automatic log entry:', err);
           });
       }, autoIntervalMinutes * 60 * 1000);
     }
@@ -224,7 +229,7 @@ module.exports = (app) => {
     });
     sendCrewNames(app, plugin);
 
-    setStatus('Waiting for updates');
+    setStatus(`Logbook plugin version ${plugin.version} started`);
   };
 
   plugin.registerWithRouter = (router) => {
@@ -260,7 +265,6 @@ module.exports = (app) => {
       }
       let stats;
       if (req.body.ago > buffer.size()) {
-        // We don't have history that far, sadly
         res.sendStatus(404);
         return;
       }
@@ -272,9 +276,7 @@ module.exports = (app) => {
         };
       }
       const author = { name: user.id, role: user.role || 'Crew' };
-      // Create the automatic log entry object
       let data = stateToEntry(stats, req.body.text, author);
-      // Merge user-provided fields (overwrites automatic if present)
       if (req.body.category) {
         data.category = req.body.category;
       } else {
@@ -298,22 +300,27 @@ module.exports = (app) => {
         data.position = {
           ...req.body.position,
         };
-        // TODO: Send delta on manually entered position?
       }
-      // Merge other possible fields (e.g. log, engine, waypoint, barometer, wind, vhf, crewNames)
       ["log", "engine", "waypoint", "barometer", "wind", "vhf", "crewNames"].forEach((key) => {
         if (req.body[key]) data[key] = req.body[key];
       });
-      // Update signature after all changes
       const { signature, ...hashData } = data;
       const crypto = require('crypto');
       data.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       const dateString = new Date(data.datetime).toISOString().substr(0, 10);
+      if (app.debug) app.debug('[MANUAL] About to save manual log entry:', data);
+      else app.error('[MANUAL] About to save manual log entry:', data);
       log.appendEntry(dateString, data)
         .then(() => {
           setStatus(`Manual log entry: ${req.body.text}`);
+          if (app.debug) app.debug('[MANUAL] Manual log entry saved:', data);
+          else app.error('[MANUAL] Manual log entry saved:', data);
           res.sendStatus(201);
-        }, (e) => handleError(e, res));
+        }, (e) => {
+          handleError(e, res);
+          if (app.debug) app.debug('[MANUAL] Error saving manual log entry:', e);
+          else app.error('[MANUAL] Error saving manual log entry:', e);
+        });
     });
     router.get('/logs/:date', (req, res) => {
       res.contentType('application/json');
@@ -384,6 +391,12 @@ module.exports = (app) => {
   plugin.schema = {
     type: 'object',
     properties: {
+      version: {
+        type: 'string',
+        title: 'Plugin version',
+        default: plugin.version,
+        readOnly: true,
+      },
       crewNames: {
         type: 'array',
         default: [],

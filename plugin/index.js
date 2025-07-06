@@ -91,6 +91,9 @@ module.exports = (app) => {
 
   plugin.start = () => {
     log = new Log(app.getDataDirPath());
+    const { configuration } = app.readPluginOptions();
+    const autoIntervalMinutes = configuration?.autoLogInterval || 5;
+    const enableAutoLogging = configuration?.enableAutoLogging !== false;
     const subscription = {
       context: 'vessels.self',
       subscribe: paths.map((p) => ({
@@ -162,20 +165,22 @@ module.exports = (app) => {
     }, 60000);
 
     // Automaatne logikirje iga 5 minuti järel
-    autoInterval = setInterval(() => {
-      // Loome automaatse logikirje
-      const author = { name: 'Automatic', role: 'System' };
-      const entry = stateToEntry(state, 'Automaatne logikirje', author);
-      const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
-      log.appendEntry(dateString, entry)
-        .then(() => {
-          setStatus('Automaatne logikirje salvestatud');
-          app.debug && app.debug('Automatic log entry saved:', entry);
-        })
-        .catch((err) => {
-          app.setPluginError(`Automaatse logikirje salvestus ebaõnnestus: ${err.message}`);
-        });
-    }, 5 * 60 * 1000);
+    if (enableAutoLogging) {
+      autoInterval = setInterval(() => {
+        // Loome automaatse logikirje
+        const author = { name: 'Automatic', role: 'System' };
+        const entry = stateToEntry(state, 'Automaatne logikirje', author);
+        const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
+        log.appendEntry(dateString, entry)
+          .then(() => {
+            setStatus('Automaatne logikirje salvestatud');
+            app.debug && app.debug('Automatic log entry saved:', entry);
+          })
+          .catch((err) => {
+            app.setPluginError(`Automaatse logikirje salvestus ebaõnnestus: ${err.message}`);
+          });
+      }, autoIntervalMinutes * 60 * 1000);
+    }
 
     app.registerPutHandler('vessels.self', 'communication.crewNames', (ctx, path, value, cb) => {
       if (!Array.isArray(value)) {
@@ -385,6 +390,20 @@ module.exports = (app) => {
           const: tz.tzCode,
           title: tz.label,
         })),
+      },
+      autoLogInterval: {
+        type: 'number',
+        default: 5,
+        title: 'Automaatse logikirje intervall (minutites)',
+        description: 'Kui sageli salvestatakse automaatseid logikirjeid',
+        minimum: 1,
+        maximum: 60,
+      },
+      enableAutoLogging: {
+        type: 'boolean',
+        default: true,
+        title: 'Luba automaatne logikirje',
+        description: 'Kas salvestada automaatseid logikirjeid',
       },
     },
   };

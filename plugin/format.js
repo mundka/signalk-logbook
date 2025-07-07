@@ -10,16 +10,16 @@ function ms2kt(ms) {
 
 module.exports = function stateToEntry(state, text, author = '') {
   const now = new Date().toISOString();
-  let authorObj = { name: '', role: 'Crew' };
+  let authorStr = '';
   if (typeof author === 'string') {
-    authorObj.name = author;
-  } else if (author && typeof author === 'object') {
-    authorObj = author;
+    authorStr = author;
+  } else if (author && typeof author === 'object' && author.name) {
+    authorStr = author.name;
   }
   const data = {
     datetime: state['navigation.datetime'] || now,
     text,
-    author: authorObj,
+    author: authorStr,
     audit: {
       createdAt: now,
       modifiedAt: null,

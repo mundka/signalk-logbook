@@ -55,6 +55,18 @@ function stripAudit(entry) {
   return entry;
 }
 
+// Utiliit skeemiväliste väljade eemaldamiseks
+function stripDisallowedFields(entry) {
+  if (!entry) return entry;
+  const disallowed = ['audit', 'vesselState', 'signatureValid'];
+  disallowed.forEach((key) => {
+    if (entry[key] !== undefined) {
+      delete entry[key];
+    }
+  });
+  return entry;
+}
+
 module.exports = (app) => {
   const plugin = {};
   let unsubscribes = [];
@@ -185,6 +197,8 @@ module.exports = (app) => {
         const dateString = now.toISOString().substr(0, 10);
         // Eemalda audit enne salvestamist
         entry = stripAudit(entry);
+        // Eemalda skeemivälised väljad enne salvestamist
+        entry = stripDisallowedFields(entry);
         if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
         else app.error('[AUTO] About to save automatic log entry:', entry);
         log.appendEntry(dateString, entry)
@@ -328,6 +342,8 @@ module.exports = (app) => {
       const dateString = new Date(data.datetime).toISOString().substr(0, 10);
       // Eemalda audit enne salvestamist
       data = stripAudit(data);
+      // Eemalda skeemivälised väljad enne salvestamist
+      data = stripDisallowedFields(data);
       if (app.debug) app.debug('[MANUAL] About to save manual log entry:', data);
       else app.error('[MANUAL] About to save manual log entry:', data);
       log.appendEntry(dateString, data)
@@ -379,7 +395,9 @@ module.exports = (app) => {
       }
       // Eemalda audit enne salvestamist
       const entryNoAudit = stripAudit(entry);
-      log.writeEntry(entryNoAudit)
+      // Eemalda skeemivälised väljad enne salvestamist
+      const entryNoDisallowed = stripDisallowedFields(entryNoAudit);
+      log.writeEntry(entryNoDisallowed)
         .then(() => {
           res.sendStatus(200);
         }, (e) => handleError(e, res));

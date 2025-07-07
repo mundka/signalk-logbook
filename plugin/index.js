@@ -47,6 +47,14 @@ function sendCrewNames(app, plugin) {
   sendDelta(app, plugin, new Date(), 'communication.crewNames', configuration.crewNames || []);
 }
 
+// Utiliit audit välja eemaldamiseks
+function stripAudit(entry) {
+  if (entry && entry.audit) {
+    delete entry.audit;
+  }
+  return entry;
+}
+
 module.exports = (app) => {
   const plugin = {};
   let unsubscribes = [];
@@ -173,8 +181,10 @@ module.exports = (app) => {
         const author = { name: 'Automatic', role: 'System' };
         // Clone the current state and set a unique datetime
         const entryState = { ...state, 'navigation.datetime': now.toISOString() };
-        const entry = stateToEntry(entryState, 'Automatic log entry', author);
+        let entry = stateToEntry(entryState, 'Automatic log entry', author);
         const dateString = now.toISOString().substr(0, 10);
+        // Eemalda audit enne salvestamist
+        entry = stripAudit(entry);
         if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
         else app.error('[AUTO] About to save automatic log entry:', entry);
         log.appendEntry(dateString, entry)
@@ -316,6 +326,8 @@ module.exports = (app) => {
       const crypto = require('crypto');
       data.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       const dateString = new Date(data.datetime).toISOString().substr(0, 10);
+      // Eemalda audit enne salvestamist
+      data = stripAudit(data);
       if (app.debug) app.debug('[MANUAL] About to save manual log entry:', data);
       else app.error('[MANUAL] About to save manual log entry:', data);
       log.appendEntry(dateString, data)
@@ -365,9 +377,9 @@ module.exports = (app) => {
       if (user && user.id && !entry.author) {
         entry.author = { name: user.id, role: user.role || 'Crew' };
       }
-      if (!entry.audit) entry.audit = {};
-      entry.audit.modifiedAt = new Date().toISOString();
-      log.writeEntry(entry)
+      // Eemalda audit enne salvestamist
+      const entryNoAudit = stripAudit(entry);
+      log.writeEntry(entryNoAudit)
         .then(() => {
           res.sendStatus(200);
         }, (e) => handleError(e, res));

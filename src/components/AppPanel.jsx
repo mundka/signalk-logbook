@@ -229,7 +229,7 @@ function AppPanel(props) {
           </TabContent>
         </Col>
       </Row>
-      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff' }}>Plugin version 0.7.5 (TEST)</div>
+      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff' }}>Plugin version 0.7.56 (live test)</div>
     </div>
   );
 }

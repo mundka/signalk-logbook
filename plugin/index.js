@@ -192,8 +192,6 @@ module.exports = (app) => {
         let entry = stateToEntry(entryState, 'Automatic log entry', author);
         const dateString = now.toISOString().substr(0, 10);
         // Eemalda audit enne salvestamist
-        entry = stripAudit(entry);
-        // Eemalda skeemivälised väljad enne salvestamist
         entry = stripDisallowedFields(entry);
         if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
         else app.error('[AUTO] About to save automatic log entry:', entry);
@@ -336,8 +334,6 @@ module.exports = (app) => {
       const crypto = require('crypto');
       data.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       const dateString = new Date(data.datetime).toISOString().substr(0, 10);
-      // Eemalda audit enne salvestamist
-      data = stripAudit(data);
       // Eemalda skeemivälised väljad enne salvestamist
       data = stripDisallowedFields(data);
       if (app.debug) app.debug('[MANUAL] About to save manual log entry:', data);
@@ -389,10 +385,8 @@ module.exports = (app) => {
       if (user && user.id && !entry.author) {
         entry.author = { name: user.id, role: user.role || 'Crew' };
       }
-      // Eemalda audit enne salvestamist
-      const entryNoAudit = stripAudit(entry);
       // Eemalda skeemivälised väljad enne salvestamist
-      const entryNoDisallowed = stripDisallowedFields(entryNoAudit);
+      const entryNoDisallowed = stripDisallowedFields(entry);
       log.writeEntry(entryNoDisallowed)
         .then(() => {
           res.sendStatus(200);

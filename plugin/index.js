@@ -47,20 +47,16 @@ function sendCrewNames(app, plugin) {
   sendDelta(app, plugin, new Date(), 'communication.crewNames', configuration.crewNames || []);
 }
 
-// Utiliit audit välja eemaldamiseks
-function stripAudit(entry) {
-  if (entry && entry.audit) {
-    delete entry.audit;
-  }
-  return entry;
-}
-
-// Utiliit skeemiväliste väljade eemaldamiseks
+// Lubatud väljad Entry skeemi põhjal
+const ALLOWED_ENTRY_FIELDS = [
+  'datetime', 'position', 'log', 'waypoint', 'heading', 'course', 'speed', 'barometer', 'wind',
+  'observations', 'engine', 'vhf', 'crewNames', 'end', 'text', 'author', 'category'
+];
+// Utiliit: eemalda kõik väljad, mis pole skeemis lubatud
 function stripDisallowedFields(entry) {
   if (!entry) return entry;
-  const disallowed = ['audit', 'vesselState', 'signatureValid'];
-  disallowed.forEach((key) => {
-    if (entry[key] !== undefined) {
+  Object.keys(entry).forEach((key) => {
+    if (!ALLOWED_ENTRY_FIELDS.includes(key)) {
       delete entry[key];
     }
   });

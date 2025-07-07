@@ -135,6 +135,7 @@ function AppPanel(props) {
       ...entry,
     };
     delete savingEntry.signatureValid;
+    delete savingEntry.audit;
     fetch('/plugins/signalk-logbook/logs', {
       method: 'POST',
       headers: {

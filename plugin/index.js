@@ -410,6 +410,9 @@ module.exports = (app) => {
           res.sendStatus(204);
         }, (e) => handleError(e, res));
     });
+    router.get('/version', (req, res) => {
+      res.json({ version: plugin.version });
+    });
   };
 
   plugin.stop = () => {

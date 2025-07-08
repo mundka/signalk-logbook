@@ -33,6 +33,7 @@ function AppPanel(props) {
   const [addEntry, setAddEntry] = useState(null);
   const [needsUpdate, setNeedsUpdate] = useState(true);
   const [timezone, setTimezone] = useState('UTC');
+  const [pluginVersion, setPluginVersion] = useState('');
 
   const loginStatus = props.loginStatus.status;
 
@@ -94,6 +95,14 @@ function AppPanel(props) {
         }
       });
   }, [timezone]);
+
+  useEffect(() => {
+    fetch('/plugins/signalk-logbook/version')
+      .then((r) => r.json())
+      .then((v) => {
+        if (v && v.version) setPluginVersion(v.version);
+      });
+  }, []);
 
   function saveEntry(entry) {
     const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
@@ -229,7 +238,9 @@ function AppPanel(props) {
           </TabContent>
         </Col>
       </Row>
-      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff' }}>Plugin version 0.7.56 (live test)</div>
+      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff' }}>
+        Plugin version {pluginVersion || '...'} (live test)
+      </div>
     </div>
   );
 }

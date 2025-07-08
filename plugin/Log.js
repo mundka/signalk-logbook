@@ -44,11 +44,12 @@ class Log {
             return Promise.reject(valid.errors[0]);
           }
           return data.map((entry) => {
-            const { signature, ...hashData } = entry;
+            const { signature, originalSignature, ...hashData } = entry;
             const hash = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
+            const valid = originalSignature ? (originalSignature === hash) : (signature === hash);
             const cleaned = stripDisallowedFields({
               ...entry,
-              signatureValid: signature === hash,
+              signatureValid: valid,
               category: entry.category || 'navigation',
               datetime: new Date(entry.datetime),
             });

@@ -377,6 +377,14 @@ module.exports = (app) => {
       if (user && user.id && !entry.author) {
         entry.author = { name: user.id, role: user.role || 'Crew' };
       }
+      // Kui kirjel on signature, salvesta see originalSignature'na
+      if (entry.signature && !entry.originalSignature) {
+        entry.originalSignature = entry.signature;
+      }
+      // Arvuta uus signature muudatuse põhjal
+      const { signature, originalSignature, ...hashData } = entry;
+      const crypto = require('crypto');
+      entry.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       // Eemalda skeemivälised väljad enne salvestamist
       const entryNoDisallowed = stripDisallowedFields(entry);
       log.writeEntry(entryNoDisallowed)

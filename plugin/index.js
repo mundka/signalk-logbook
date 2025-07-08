@@ -386,9 +386,14 @@ module.exports = (app) => {
       entry.signature = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
       // Eemalda skeemivälised väljad enne salvestamist
       const entryNoDisallowed = stripDisallowedFields(entry);
-      log.writeEntry(entryNoDisallowed)
+      // UUS: Salvesta amendment uue kirjena, millel on amends viide muudetava kirje datetime-le
+      entryNoDisallowed.amends = req.params.entry;
+      // Uus datetime (praegune aeg)
+      entryNoDisallowed.datetime = new Date().toISOString();
+      const dateString = entryNoDisallowed.datetime.substr(0, 10);
+      log.appendEntry(dateString, entryNoDisallowed)
         .then(() => {
-          res.sendStatus(200);
+          res.sendStatus(201);
         }, (e) => handleError(e, res));
     });
     router.delete('/logs/:date/:entry', (req, res) => {

@@ -93,32 +93,6 @@ function EntryEditor(props) {
     }
     updateEntry(updated);
   }
-  function saveEntry(entry) {
-    // Kui tegemist on muudatusega (on olemas entry.datetime), salvesta POST-iga ja lisa amends
-    if (entry && entry.datetime) {
-      const newEntry = {
-        ...entry,
-        amends: entry.datetime,
-        datetime: new Date().toISOString(), // Uus unikaalne aeg
-      };
-      delete newEntry.signatureValid;
-      delete newEntry.signature;
-      delete newEntry.originalSignature;
-      fetch('/plugins/signalk-logbook/logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newEntry),
-      })
-        .then(() => {
-          props.cancel();
-          if (props.setNeedsUpdate) props.setNeedsUpdate(true);
-        });
-      return;
-    }
-    // ... olemasolev saveEntry loogika ...
-  }
   function deleteEntry() {
     props.delete(entry);
   }
@@ -391,7 +365,7 @@ function EntryEditor(props) {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={() => saveEntry(entry)}>
+        <Button color="primary" onClick={() => props.save(entry)}>
           Save
         </Button>{' '}
         <Button color="secondary" onClick={props.cancel}>

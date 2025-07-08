@@ -297,6 +297,9 @@ module.exports = (app) => {
       } else {
         data.category = 'navigation';
       }
+      if (req.body.amends) {
+        data.amends = req.body.amends;
+      }
       if (req.body.observations) {
         data.observations = {
           ...req.body.observations,

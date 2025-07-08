@@ -89,6 +89,11 @@ function Logbook(props) {
                   <FaExclamationTriangle />
                 </span>
               )}
+              {entry.amends && (
+                <div style={{ fontSize: '0.8em', color: '#888' }}>
+                  Amends entry from {new Date(entry.amends).toLocaleString('en-GB', { timeZone: props.displayTimeZone })}
+                </div>
+              )}
             </td>
             <td>{entry.text}</td>
           </tr>

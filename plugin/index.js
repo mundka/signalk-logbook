@@ -271,11 +271,7 @@ module.exports = (app) => {
         return;
       }
       let stats;
-      if (req.body.ago > buffer.size()) {
-        res.sendStatus(404);
-        return;
-      }
-      if (buffer.size() > 0) {
+      if (typeof req.body.ago === 'number' && req.body.ago >= 0 && req.body.ago < buffer.size()) {
         stats = buffer.get(req.body.ago);
       } else {
         stats = {

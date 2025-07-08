@@ -146,6 +146,17 @@ function EntryEditor(props) {
     changes.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
   }
 
+  // Leia eelnevad logikirjed (Add entry puhul)
+  let previousEntries = [];
+  if (props.allEntries && entry && Number.isNaN(Number(entry.ago))) {
+    // Kui on Add entry (uuel kirjel on ago olemas ja number), ära kuva
+  } else if (props.allEntries && entry) {
+    previousEntries = props.allEntries
+      .filter(e => e.datetime !== entry.datetime)
+      .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))
+      .slice(0, 5);
+  }
+
   return (
     <Modal isOpen={true} toggle={props.cancel}>
       <ModalHeader toggle={props.cancel}>
@@ -171,6 +182,17 @@ function EntryEditor(props) {
             <Label for="text">
               Remarks
             </Label>
+            {previousEntries.length > 0 && (
+              <div style={{ border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafbfc', marginBottom: 8 }}>
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Previous entries</div>
+                {previousEntries.map((c) => (
+                  <div key={c.datetime} style={{ marginBottom: 6 }}>
+                    <div style={{ fontSize: '0.9em', color: '#888' }}>{new Date(c.datetime).toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</div>
+                    <div style={{ fontWeight: 'bold' }}>{c.text}</div>
+                  </div>
+                ))}
+              </div>
+            )}
             <Input
               id="text"
               name="text"

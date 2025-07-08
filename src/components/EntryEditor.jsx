@@ -113,11 +113,22 @@ function EntryEditor(props) {
   // Leia muudatused (Changes)
   let changes = [];
   if (props.allEntries && entry) {
-    // Leia kõik muudatused, mis viitavad sellele kirjele või millele see kirje viitab
-    const baseDatetime = entry.amends || entry.datetime;
-    changes = props.allEntries.filter(e => e.amends === baseDatetime || (entry.amends && e.datetime === entry.amends));
-    // Sorteeri ajaliselt
-    changes.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+    // Leia ahela algus (originaalkirje)
+    let base = entry;
+    while (base.amends) {
+      const prev = props.allEntries.find(e => e.datetime === base.amends);
+      if (!prev) break;
+      base = prev;
+    }
+    // Kogu ahel: originaalist kuni kõige uuemani
+    let chain = [base];
+    let next = props.allEntries.find(e => e.amends === base.datetime);
+    while (next) {
+      chain.push(next);
+      next = props.allEntries.find(e => e.amends === next.datetime);
+    }
+    // Kuvame ahela tagurpidi (uusim -> vanim)
+    changes = [...chain].reverse();
   }
 
   // Leia eelnevad logikirjed (Add entry puhul)
@@ -148,17 +159,6 @@ function EntryEditor(props) {
           && 'New entry'}
       </ModalHeader>
       <ModalBody>
-        { Number.isNaN(Number(entry.ago))
-          && <Row>
-          <Col className="text-end text-right">
-            {isLatest && (
-              <Button color="danger" onClick={deleteEntry}>
-                Delete
-              </Button>
-            )}
-          </Col>
-        </Row>
-        }
         <Form>
           <FormGroup>
             <Label for="text">
@@ -182,10 +182,10 @@ function EntryEditor(props) {
               placeholder="Tell what happened"
               value={entry.text}
               onChange={handleChange}
-              disabled={!isLatest || (isAutomaticEntry(entry) && 'text' !== 'text')}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'text' !== 'text')}
             />
           </FormGroup>
-          {changes.length > 0 && (
+          {changes.length > 1 && (
             <FormGroup>
               <Label>Changes</Label>
               <div style={{ border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafbfc' }}>
@@ -209,7 +209,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.text}
               onChange={handleChange}
-              disabled={isAutomaticEntry(entry) && 'text' !== 'text'}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'text' !== 'text')}
             >
               {agoOptions.map((ago) => (
               <option key={ago} value={ago}>{ago} minutes ago</option>
@@ -227,7 +227,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.category}
               onChange={handleChange}
-              disabled={!isLatest || (isAutomaticEntry(entry) && 'category' !== 'category')}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'category' !== 'category')}
             >
               {props.categories.map((category) => (
               <option key={category} value={category}>{category}</option>
@@ -245,7 +245,7 @@ function EntryEditor(props) {
                   placeholder="16"
                   value={entry.vhf}
                   onChange={handleChange}
-                  disabled={isAutomaticEntry(entry) && 'vhf' !== 'vhf'}
+                  disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'vhf' !== 'vhf')}
                 />
               </FormGroup>
           }
@@ -264,7 +264,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.seaState : -1}
                       onChange={handleChange}
-                      disabled={isAutomaticEntry(entry) && 'seaState' !== 'seaState'}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'seaState' !== 'seaState')}
                     >
                       {seaStates.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -285,7 +285,7 @@ function EntryEditor(props) {
                         step="1"
                         value={entry.observations ? entry.observations.cloudCoverage : -1}
                         onChange={handleChange}
-                        disabled={isAutomaticEntry(entry) && 'cloudCoverage' !== 'cloudCoverage'}
+                        disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'cloudCoverage' !== 'cloudCoverage')}
                       />
                       <InputGroupText>
                         {entry.observations
@@ -303,7 +303,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.visibility : -1}
                       onChange={handleChange}
-                      disabled={isAutomaticEntry(entry) && 'visibility' !== 'visibility'}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'visibility' !== 'visibility')}
                     >
                       {visibility.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -329,7 +329,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.latitude : ''}
                       onChange={handleChange}
-                      disabled={isAutomaticEntry(entry) && 'latitude' !== 'latitude'}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'latitude' !== 'latitude')}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -346,7 +346,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.longitude : ''}
                       onChange={handleChange}
-                      disabled={isAutomaticEntry(entry) && 'longitude' !== 'longitude'}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'longitude' !== 'longitude')}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -359,7 +359,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.position ? entry.position.source : ''}
                       onChange={handleChange}
-                      disabled={isAutomaticEntry(entry) && 'source' !== 'source'}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'source' !== 'source')}
                     >
                       {fixTypes.map((fix) => (
                       <option key={fix} value={fix}>{fix}</option>

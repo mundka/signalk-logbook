@@ -107,6 +107,12 @@ function EntryEditor(props) {
     10,
     15,
   ];
+
+  // Lisa utiliit, mis tuvastab automaatse logikirje
+  function isAutomaticEntry(entry) {
+    return entry && (entry.author === 'Automatic' || entry.text === 'Automatic log entry');
+  }
+
   return (
     <Modal isOpen={true} toggle={props.cancel}>
       <ModalHeader toggle={props.cancel}>
@@ -139,6 +145,7 @@ function EntryEditor(props) {
               placeholder="Tell what happened"
               value={entry.text}
               onChange={handleChange}
+              disabled={isAutomaticEntry(entry) && 'text' !== 'text'}
             />
           </FormGroup>
           { !Number.isNaN(Number(entry.ago))
@@ -152,6 +159,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.text}
               onChange={handleChange}
+              disabled={isAutomaticEntry(entry) && 'text' !== 'text'}
             >
               {agoOptions.map((ago) => (
               <option key={ago} value={ago}>{ago} minutes ago</option>
@@ -169,6 +177,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.category}
               onChange={handleChange}
+              disabled={isAutomaticEntry(entry) && 'category' !== 'category'}
             >
               {props.categories.map((category) => (
               <option key={category} value={category}>{category}</option>
@@ -186,6 +195,7 @@ function EntryEditor(props) {
                   placeholder="16"
                   value={entry.vhf}
                   onChange={handleChange}
+                  disabled={isAutomaticEntry(entry) && 'vhf' !== 'vhf'}
                 />
               </FormGroup>
           }
@@ -204,6 +214,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.seaState : -1}
                       onChange={handleChange}
+                      disabled={isAutomaticEntry(entry) && 'seaState' !== 'seaState'}
                     >
                       {seaStates.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -224,6 +235,7 @@ function EntryEditor(props) {
                         step="1"
                         value={entry.observations ? entry.observations.cloudCoverage : -1}
                         onChange={handleChange}
+                        disabled={isAutomaticEntry(entry) && 'cloudCoverage' !== 'cloudCoverage'}
                       />
                       <InputGroupText>
                         {entry.observations
@@ -241,6 +253,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.visibility : -1}
                       onChange={handleChange}
+                      disabled={isAutomaticEntry(entry) && 'visibility' !== 'visibility'}
                     >
                       {visibility.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -266,6 +279,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.latitude : ''}
                       onChange={handleChange}
+                      disabled={isAutomaticEntry(entry) && 'latitude' !== 'latitude'}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -282,6 +296,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.longitude : ''}
                       onChange={handleChange}
+                      disabled={isAutomaticEntry(entry) && 'longitude' !== 'longitude'}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -294,6 +309,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.position ? entry.position.source : ''}
                       onChange={handleChange}
+                      disabled={isAutomaticEntry(entry) && 'source' !== 'source'}
                     >
                       {fixTypes.map((fix) => (
                       <option key={fix} value={fix}>{fix}</option>

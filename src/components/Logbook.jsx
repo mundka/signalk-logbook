@@ -84,7 +84,7 @@ function Logbook(props) {
             <td>{entry.engine && !Number.isNaN(Number(entry.engine.hours)) ? `${entry.engine.hours}h` : ''}</td>
             <td>
               {entry.author || 'auto'}
-              {!entry.signatureValid && (
+              {entry.signatureValid === false && (
                 <span title="Logikirje on muudetud või rikutud" style={{ color: 'red', marginLeft: 4 }}>
                   <FaExclamationTriangle />
                 </span>

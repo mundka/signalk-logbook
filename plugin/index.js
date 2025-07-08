@@ -282,6 +282,10 @@ module.exports = (app) => {
           ...state,
         };
       }
+      // Kui statsis pole navigation.position, aga state'is on, lisa see
+      if (!stats['navigation.position'] && state['navigation.position']) {
+        stats['navigation.position'] = state['navigation.position'];
+      }
       const author = { name: user.id, role: user.role || 'Crew' };
       // If user did not provide a datetime, use current time for uniqueness
       if (!stats['navigation.datetime']) {

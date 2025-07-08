@@ -9,6 +9,7 @@ const { parse, stringify } = require('yaml');
 const { Validator } = require('jsonschema');
 const openAPI = require('../schema/openapi.json');
 const crypto = require('crypto');
+const { stripDisallowedFields } = require('./index');
 
 class Log {
   constructor(dir) {
@@ -45,12 +46,13 @@ class Log {
           return data.map((entry) => {
             const { signature, ...hashData } = entry;
             const hash = crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
-            return {
+            const cleaned = stripDisallowedFields({
               ...entry,
               signatureValid: signature === hash,
               category: entry.category || 'navigation',
               datetime: new Date(entry.datetime),
-            };
+            });
+            return cleaned;
           });
         }));
   }
@@ -82,12 +84,14 @@ class Log {
       return Promise.reject(new Error('Invalid date format'));
     }
     const path = this.getPath(date);
-    // TODO: Validate against schema
     Log.sortDate(data);
-    const normalized = data.map((e) => ({
-      ...e,
-      datetime: e.datetime.toISOString(),
-    }));
+    const normalized = data.map((e) => {
+      const cleaned = stripDisallowedFields(e);
+      return {
+        ...cleaned,
+        datetime: cleaned.datetime instanceof Date ? cleaned.datetime.toISOString() : cleaned.datetime,
+      };
+    });
     return this.validateDate(normalized)
       .then((valid) => {
         if (valid.errors.length > 0) {

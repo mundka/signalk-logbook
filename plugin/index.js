@@ -466,3 +466,5 @@ module.exports = (app) => {
 
   return plugin;
 };
+
+module.exports.stripDisallowedFields = stripDisallowedFields;

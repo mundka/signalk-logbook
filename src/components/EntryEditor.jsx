@@ -131,6 +131,12 @@ function EntryEditor(props) {
       .slice(0, 5);
   }
 
+  // Leia, kas see kirje on kõige uuem (st ükski teine kirje ei viita sellele amends-väljaga)
+  let isLatest = true;
+  if (props.allEntries && entry) {
+    isLatest = !props.allEntries.some(e => e.amends === entry.datetime);
+  }
+
   return (
     <Modal isOpen={true} toggle={props.cancel}>
       <ModalHeader toggle={props.cancel}>
@@ -145,9 +151,11 @@ function EntryEditor(props) {
         { Number.isNaN(Number(entry.ago))
           && <Row>
           <Col className="text-end text-right">
-            <Button color="danger" onClick={deleteEntry}>
-              Delete
-            </Button>
+            {isLatest && (
+              <Button color="danger" onClick={deleteEntry}>
+                Delete
+              </Button>
+            )}
           </Col>
         </Row>
         }
@@ -174,7 +182,7 @@ function EntryEditor(props) {
               placeholder="Tell what happened"
               value={entry.text}
               onChange={handleChange}
-              disabled={isAutomaticEntry(entry) && 'text' !== 'text'}
+              disabled={!isLatest || (isAutomaticEntry(entry) && 'text' !== 'text')}
             />
           </FormGroup>
           {changes.length > 0 && (
@@ -219,7 +227,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.category}
               onChange={handleChange}
-              disabled={isAutomaticEntry(entry) && 'category' !== 'category'}
+              disabled={!isLatest || (isAutomaticEntry(entry) && 'category' !== 'category')}
             >
               {props.categories.map((category) => (
               <option key={category} value={category}>{category}</option>

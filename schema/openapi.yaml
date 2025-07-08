@@ -178,6 +178,10 @@ components:
         datetime:
           type: string
           format: date-time
+        amends:
+          type: string
+          format: date-time
+          description: Reference to the datetime of the entry this amends
         position:
           type: object
           required:

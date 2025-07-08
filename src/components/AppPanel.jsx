@@ -105,37 +105,32 @@ function AppPanel(props) {
   }, []);
 
   function saveEntry(entry) {
-    const dateString = new Date(entry.datetime).toISOString().substr(0, 10);
-    // Sanitize
-    const savingEntry = {
-      ...entry,
-    };
-    delete savingEntry.point;
-    delete savingEntry.date;
-    delete savingEntry.signatureValid;
-    fetch(`/plugins/signalk-logbook/logs/${dateString}/${entry.datetime}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(savingEntry),
-    })
-      .then(() => {
-        const updatedEntries = [...data.entries];
-        const idx = data.entries.findIndex((e) => e.datetime === entry.datetime);
-        if (idx !== -1) {
-          updatedEntries[idx] = entry;
-          setData({
-            ...data,
-            entries: updatedEntries,
-          });
-        }
-        setEditEntry(null);
-        if (viewEntry) {
-          // Update viewEntry
-          setViewEntry(entry);
-        }
-      });
+    // Kui tegemist on muudatusega (edit), loo amendment POST päringuga
+    const isEdit = !!entry.datetime && !Number.isNaN(Date.parse(entry.datetime));
+    if (isEdit) {
+      const savingEntry = {
+        ...entry,
+        amends: entry.datetime,
+        datetime: new Date().toISOString(),
+      };
+      delete savingEntry.point;
+      delete savingEntry.date;
+      delete savingEntry.signatureValid;
+      fetch('/plugins/signalk-logbook/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(savingEntry),
+      })
+        .then(() => {
+          setEditEntry(null);
+          setNeedsUpdate(true);
+        });
+      return;
+    }
+    // Kui on täiesti uus kirje (nt Add entry), kasuta olemasolevat loogikat
+    saveAddEntry(entry);
   }
 
   function saveAddEntry(entry) {

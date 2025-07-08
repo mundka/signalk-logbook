@@ -136,6 +136,16 @@ function EntryEditor(props) {
     return entry && (entry.author === 'Automatic' || entry.text === 'Automatic log entry');
   }
 
+  // Leia muudatused (Changes)
+  let changes = [];
+  if (props.allEntries && entry) {
+    // Leia kõik muudatused, mis viitavad sellele kirjele või millele see kirje viitab
+    const baseDatetime = entry.amends || entry.datetime;
+    changes = props.allEntries.filter(e => e.amends === baseDatetime || (entry.amends && e.datetime === entry.amends));
+    // Sorteeri ajaliselt
+    changes.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+  }
+
   return (
     <Modal isOpen={true} toggle={props.cancel}>
       <ModalHeader toggle={props.cancel}>
@@ -171,6 +181,19 @@ function EntryEditor(props) {
               disabled={isAutomaticEntry(entry) && 'text' !== 'text'}
             />
           </FormGroup>
+          {changes.length > 0 && (
+            <FormGroup>
+              <Label>Changes</Label>
+              <div style={{ border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafbfc' }}>
+                {changes.map((c, idx) => (
+                  <div key={c.datetime} style={{ marginBottom: 6 }}>
+                    <div style={{ fontSize: '0.9em', color: '#888' }}>{new Date(c.datetime).toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</div>
+                    <div style={{ fontWeight: 'bold' }}>{c.text}</div>
+                  </div>
+                ))}
+              </div>
+            </FormGroup>
+          )}
           { !Number.isNaN(Number(entry.ago))
             && <FormGroup>
             <Label for="ago">

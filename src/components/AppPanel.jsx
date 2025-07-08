@@ -190,6 +190,7 @@ function AppPanel(props) {
           delete={deleteEntry}
           categories={categories}
           displayTimeZone={timezone}
+          allEntries={data.entries}
           /> : null }
         { viewEntry ? <EntryViewer
           entry={viewEntry}

@@ -354,7 +354,9 @@ module.exports = (app) => {
       res.contentType('application/json');
       log.getDate(req.params.date)
         .then((date) => {
-          res.send(JSON.stringify(date));
+          // Eemalda signatureValid ja muud skeemivälised väljad
+          const cleaned = date.map(stripDisallowedFields);
+          res.send(JSON.stringify(cleaned));
         }, (e) => handleError(e, res));
     });
     router.get('/logs/:date/:entry', (req, res) => {
@@ -365,7 +367,8 @@ module.exports = (app) => {
       }
       log.getEntry(req.params.entry)
         .then((entry) => {
-          res.send(JSON.stringify(entry));
+          // Eemalda signatureValid ja muud skeemivälised väljad
+          res.send(JSON.stringify(stripDisallowedFields(entry)));
         }, (e) => handleError(e, res));
     });
     router.put('/logs/:date/:entry', (req, res) => {

@@ -9,7 +9,7 @@ const { parse, stringify } = require('yaml');
 const { Validator } = require('jsonschema');
 const openAPI = require('../schema/openapi.json');
 const crypto = require('crypto');
-const { stripDisallowedFields } = require('./index');
+const { stripDisallowedFields } = require('./utils');
 
 class Log {
   constructor(dir) {

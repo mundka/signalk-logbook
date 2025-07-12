@@ -77,6 +77,12 @@ function EntryEditor(props) {
     }
   }
 
+  // Previous entries: ainult selle logikirje muudatusahela varasemad versioonid
+  let previousAmendEntries = [];
+  if (changes.length > 1) {
+    previousAmendEntries = changes.slice(0, -1);
+  }
+
   // Kas see on viimane versioon?
   let isLatest = true;
   if (props.allEntries && currentEntry && !isAddEntry) {
@@ -155,9 +161,31 @@ function EntryEditor(props) {
   // Väljade lubatavus: Add entry puhul alati true, muidu ainult kui on viimane ja pole automaatne
   function isFieldEditable(field) {
     if (isAddEntry) return true;
-    if (!isLatest) return false;
     if (isAutomaticEntry(currentEntry)) return false;
+    if (!isLatest) return false;
     return true;
+  }
+
+  function validateAndSave() {
+    if (!entry.text || entry.text.trim() === "") {
+      alert("Logikirje tekst ('Remarks') on kohustuslik!");
+      return;
+    }
+    let savingEntry = { ...entry };
+    // Kui kategooria pole navigation, ära saada position objekti
+    if (savingEntry.category !== 'navigation') {
+      delete savingEntry.position;
+    } else {
+      // Kui navigation, kontrolli et latitude ja longitude oleksid olemas
+      if (!savingEntry.position || savingEntry.position.latitude === undefined || savingEntry.position.longitude === undefined || savingEntry.position.latitude === '' || savingEntry.position.longitude === '') {
+        alert("Palun sisesta asukoht (latitude ja longitude)!");
+        return;
+      }
+    }
+    if (!savingEntry.datetime) {
+      savingEntry.datetime = new Date().toISOString();
+    }
+    props.save(savingEntry);
   }
 
   return (
@@ -171,10 +199,10 @@ function EntryEditor(props) {
         <Form>
           <FormGroup>
             <Label for="text">Remarks</Label>
-            {previousEntries.length > 0 && (
+            {previousAmendEntries.length > 0 && (
               <div style={{ border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafbfc', marginBottom: 8 }}>
                 <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Previous entries</div>
-                {previousEntries.map((c) => (
+                {previousAmendEntries.map((c) => (
                   <div key={c.datetime} style={{ marginBottom: 6 }}>
                     <div style={{ fontSize: '0.9em', color: '#888' }}>{new Date(c.datetime).toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</div>
                     <div style={{ fontWeight: 'bold' }}>{c.text}</div>
@@ -361,17 +389,7 @@ function EntryEditor(props) {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={() => {
-          if (!entry.text || entry.text.trim() === "") {
-            alert("Logikirje tekst ('Remarks') on kohustuslik!");
-            return;
-          }
-          let savingEntry = { ...entry };
-          if (!savingEntry.datetime) {
-            savingEntry.datetime = new Date().toISOString();
-          }
-          props.save(savingEntry);
-        }}>
+        <Button color="primary" onClick={validateAndSave}>
           Save
         </Button>{' '}
         <Button color="secondary" onClick={props.cancel}>

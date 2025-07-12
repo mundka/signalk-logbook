@@ -1,7 +1,15 @@
 const crypto = require('crypto');
 
 function rad2deg(rad) {
-  return Math.round((rad * 180) / Math.PI);
+  let degrees = Math.round((rad * 180) / Math.PI);
+  // Normalize to 0-360 range
+  while (degrees < 0) {
+    degrees += 360;
+  }
+  while (degrees >= 360) {
+    degrees -= 360;
+  }
+  return degrees;
 }
 
 function ms2kt(ms) {

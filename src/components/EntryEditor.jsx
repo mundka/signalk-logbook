@@ -21,9 +21,17 @@ import {
 import { getSeaStates, getVisibility } from '../helpers/observations';
 
 function EntryEditor(props) {
+  console.log("EntryEditor props.entry:", props.entry);
+  console.log("EntryEditor props.allEntries:", props.allEntries);
+
   const [entry, updateEntry] = useState({
     ...props.entry,
   });
+
+  // Kui entry puudub, ära renderda midagi
+  if (!entry) {
+    return <div>Loading...</div>;
+  }
 
   // Leia muudatused (Changes)
   let changes = [];
@@ -32,6 +40,7 @@ function EntryEditor(props) {
   const isAddEntry = entry && !Number.isNaN(Number(entry.ago));
 
   if (props.allEntries && entry && !isAddEntry) {
+    console.log("Muudatuste ahel käivitus", entry);
     // Leia ahela algus (originaalkirje)
     let base = entry;
     while (base.amends) {

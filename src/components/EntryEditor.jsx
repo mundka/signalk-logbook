@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Modal,
   ModalHeader,
@@ -21,28 +21,15 @@ import {
 import { getSeaStates, getVisibility } from '../helpers/observations';
 
 function EntryEditor(props) {
-  console.log("EntryEditor props.entry:", props.entry);
-  console.log("EntryEditor props.allEntries:", props.allEntries);
-
-  const [entry, updateEntry] = useState({
-    ...props.entry,
-  });
-
-  // Kui entry puudub, ära renderda midagi
-  if (!entry) {
-    return <div>Loading...</div>;
-  }
-
   // Leia muudatused (Changes)
   let changes = [];
-  let currentEntry = entry;
+  let currentEntry = props.entry;
   // Lisa kaitse Add entry jaoks
-  const isAddEntry = entry && !Number.isNaN(Number(entry.ago));
+  const isAddEntry = currentEntry && !Number.isNaN(Number(currentEntry.ago));
 
-  if (props.allEntries && entry && !isAddEntry) {
-    console.log("Muudatuste ahel käivitus", entry);
+  if (props.allEntries && currentEntry && !isAddEntry) {
     // Leia ahela algus (originaalkirje)
-    let base = entry;
+    let base = currentEntry;
     while (base.amends) {
       const prev = props.allEntries.find(e => e.datetime === base.amends);
       if (!prev) break;
@@ -63,14 +50,10 @@ function EntryEditor(props) {
     }
   }
 
-  // Update entry state when currentEntry changes
-  useEffect(() => {
-    if (currentEntry && currentEntry !== props.entry) {
-      updateEntry({
-        ...currentEntry,
-      });
-    }
-  }, [currentEntry]);
+  // Kui entry puudub, ära renderda midagi
+  if (!currentEntry) {
+    return <div>Loading...</div>;
+  }
 
   const fixTypes = [
     'GPS',
@@ -82,7 +65,7 @@ function EntryEditor(props) {
   ];
 
   // Default: should observations be open?
-  const [open, setOpen] = useState(entry.observations || !Number.isNaN(Number(entry.ago)) ? 'observations' : '');
+  const [open, setOpen] = React.useState(currentEntry.observations || !Number.isNaN(Number(currentEntry.ago)) ? 'observations' : '');
   function toggle(id) {
     if (open === id) {
       setOpen();
@@ -94,7 +77,7 @@ function EntryEditor(props) {
   function handleChange(e) {
     const { name, value } = e.target;
     const updated = {
-      ...entry,
+      ...currentEntry,
     };
     switch (name) {
       case 'seaState':
@@ -138,10 +121,10 @@ function EntryEditor(props) {
         updated[name] = value;
       }
     }
-    updateEntry(updated);
+    // updateEntry(updated); // This line is removed as per the edit hint
   }
   function deleteEntry() {
-    props.delete(entry);
+    props.delete(currentEntry);
   }
   const seaStates = getSeaStates();
   const visibility = getVisibility();
@@ -159,29 +142,29 @@ function EntryEditor(props) {
 
   // Leia eelnevad logikirjed (Add entry puhul)
   let previousEntries = [];
-  if (props.allEntries && entry && Number.isNaN(Number(entry.ago))) {
+  if (props.allEntries && currentEntry && Number.isNaN(Number(currentEntry.ago))) {
     // Kui on Add entry (uuel kirjel on ago olemas ja number), ära kuva
-  } else if (props.allEntries && entry) {
+  } else if (props.allEntries && currentEntry) {
     previousEntries = props.allEntries
-      .filter(e => e.datetime !== entry.datetime)
+      .filter(e => e.datetime !== currentEntry.datetime)
       .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))
       .slice(0, 5);
   }
 
   // Leia, kas see kirje on kõige uuem (st ükski teine kirje ei viita sellele amends-väljaga)
   let isLatest = true;
-  if (props.allEntries && entry) {
-    isLatest = !props.allEntries.some(e => e.amends === entry.datetime);
+  if (props.allEntries && currentEntry) {
+    isLatest = !props.allEntries.some(e => e.amends === currentEntry.datetime);
   }
 
   return (
     <Modal isOpen={true} toggle={props.cancel}>
       <ModalHeader toggle={props.cancel}>
-        { Number.isNaN(Number(entry.ago))
-          && `Log entry ${entry.date.toLocaleString('en-GB', {
+        { Number.isNaN(Number(currentEntry.ago))
+          && `Log entry ${currentEntry.date.toLocaleString('en-GB', {
             timeZone: props.displayTimeZone,
-          })} by ${entry.author || 'auto'}`}
-        { !Number.isNaN(Number(entry.ago))
+          })} by ${currentEntry.author || 'auto'}`}
+        { !Number.isNaN(Number(currentEntry.ago))
           && 'New entry'}
       </ModalHeader>
       <ModalBody>
@@ -206,7 +189,7 @@ function EntryEditor(props) {
               name="text"
               type="textarea"
               placeholder="Tell what happened"
-              value={entry.text}
+              value={currentEntry.text}
               onChange={handleChange}
               disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             />
@@ -224,7 +207,7 @@ function EntryEditor(props) {
               </div>
             </FormGroup>
           )}
-          { !Number.isNaN(Number(entry.ago))
+          { !Number.isNaN(Number(currentEntry.ago))
             && <FormGroup>
             <Label for="ago">
               This happened
@@ -233,7 +216,7 @@ function EntryEditor(props) {
               id="ago"
               name="ago"
               type="select"
-              value={entry.text}
+              value={currentEntry.text}
               onChange={handleChange}
               disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             >
@@ -251,7 +234,7 @@ function EntryEditor(props) {
               id="category"
               name="category"
               type="select"
-              value={entry.category}
+              value={currentEntry.category}
               onChange={handleChange}
               disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'category' !== 'category')}
             >
@@ -260,7 +243,7 @@ function EntryEditor(props) {
               ))}
             </Input>
           </FormGroup>
-          { entry.category === 'radio'
+          { currentEntry.category === 'radio'
             && <FormGroup>
                 <Label for="vhf">
                   VHF channel
@@ -269,13 +252,13 @@ function EntryEditor(props) {
                   id="vhf"
                   name="vhf"
                   placeholder="16"
-                  value={entry.vhf}
+                  value={currentEntry.vhf}
                   onChange={handleChange}
                   disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'vhf' !== 'vhf')}
                 />
               </FormGroup>
           }
-          { entry.category === 'navigation'
+          { currentEntry.category === 'navigation'
             && <Accordion open={open} toggle={toggle}>
               <AccordionItem>
                 <AccordionHeader targetId="observations">Observations</AccordionHeader>
@@ -288,7 +271,7 @@ function EntryEditor(props) {
                       id="seaState"
                       name="seaState"
                       type="select"
-                      value={entry.observations ? entry.observations.seaState : -1}
+                      value={currentEntry.observations ? currentEntry.observations.seaState : -1}
                       onChange={handleChange}
                       disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'seaState' !== 'seaState')}
                     >
@@ -309,13 +292,13 @@ function EntryEditor(props) {
                         min="-1"
                         max="8"
                         step="1"
-                        value={entry.observations ? entry.observations.cloudCoverage : -1}
+                        value={currentEntry.observations ? currentEntry.observations.cloudCoverage : -1}
                         onChange={handleChange}
                         disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'cloudCoverage' !== 'cloudCoverage')}
                       />
                       <InputGroupText>
-                        {entry.observations
-                          && entry.observations.cloudCoverage > -1 ? `${entry.observations.cloudCoverage}/8` : 'n/a'}
+                        {currentEntry.observations
+                          && currentEntry.observations.cloudCoverage > -1 ? `${currentEntry.observations.cloudCoverage}/8` : 'n/a'}
                       </InputGroupText>
                     </InputGroup>
                   </FormGroup>
@@ -327,7 +310,7 @@ function EntryEditor(props) {
                       id="visibility"
                       name="visibility"
                       type="select"
-                      value={entry.observations ? entry.observations.visibility : -1}
+                      value={currentEntry.observations ? currentEntry.observations.visibility : -1}
                       onChange={handleChange}
                       disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'visibility' !== 'visibility')}
                     >
@@ -353,7 +336,7 @@ function EntryEditor(props) {
                       max="90"
                       min="-90"
                       step="0.00001"
-                      value={entry.position ? entry.position.latitude : ''}
+                      value={currentEntry.position ? currentEntry.position.latitude : ''}
                       onChange={handleChange}
                       disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'latitude' !== 'latitude')}
                     />
@@ -370,7 +353,7 @@ function EntryEditor(props) {
                       max="180"
                       min="-180"
                       step="0.00001"
-                      value={entry.position ? entry.position.longitude : ''}
+                      value={currentEntry.position ? currentEntry.position.longitude : ''}
                       onChange={handleChange}
                       disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'longitude' !== 'longitude')}
                     />
@@ -383,7 +366,7 @@ function EntryEditor(props) {
                       id="source"
                       name="source"
                       type="select"
-                      value={entry.position ? entry.position.source : ''}
+                      value={currentEntry.position ? currentEntry.position.source : ''}
                       onChange={handleChange}
                       disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'source' !== 'source')}
                     >
@@ -399,7 +382,7 @@ function EntryEditor(props) {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={() => props.save(entry)}>
+        <Button color="primary" onClick={() => props.save(currentEntry)}>
           Save
         </Button>{' '}
         <Button color="secondary" onClick={props.cancel}>

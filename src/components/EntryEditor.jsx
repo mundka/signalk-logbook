@@ -194,7 +194,7 @@ function EntryEditor(props) {
               name="text"
               type="textarea"
               placeholder="Tell what happened"
-              value={currentEntry.text}
+              value={entry.text}
               onChange={handleChange}
               disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             />
@@ -221,7 +221,7 @@ function EntryEditor(props) {
               id="ago"
               name="ago"
               type="select"
-              value={currentEntry.text}
+              value={entry.text}
               onChange={handleChange}
               disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             >
@@ -239,7 +239,7 @@ function EntryEditor(props) {
               id="category"
               name="category"
               type="select"
-              value={currentEntry.category}
+              value={entry.category}
               onChange={handleChange}
               disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'category' !== 'category')}
             >
@@ -257,7 +257,7 @@ function EntryEditor(props) {
                   id="vhf"
                   name="vhf"
                   placeholder="16"
-                  value={currentEntry.vhf}
+                  value={entry.vhf}
                   onChange={handleChange}
                   disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'vhf' !== 'vhf')}
                 />
@@ -276,7 +276,7 @@ function EntryEditor(props) {
                       id="seaState"
                       name="seaState"
                       type="select"
-                      value={currentEntry.observations ? currentEntry.observations.seaState : -1}
+                      value={entry.observations ? entry.observations.seaState : -1}
                       onChange={handleChange}
                       disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'seaState' !== 'seaState')}
                     >
@@ -297,13 +297,13 @@ function EntryEditor(props) {
                         min="-1"
                         max="8"
                         step="1"
-                        value={currentEntry.observations ? currentEntry.observations.cloudCoverage : -1}
+                        value={entry.observations ? entry.observations.cloudCoverage : -1}
                         onChange={handleChange}
                         disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'cloudCoverage' !== 'cloudCoverage')}
                       />
                       <InputGroupText>
-                        {currentEntry.observations
-                          && currentEntry.observations.cloudCoverage > -1 ? `${currentEntry.observations.cloudCoverage}/8` : 'n/a'}
+                        {entry.observations
+                          && entry.observations.cloudCoverage > -1 ? `${entry.observations.cloudCoverage}/8` : 'n/a'}
                       </InputGroupText>
                     </InputGroup>
                   </FormGroup>
@@ -315,7 +315,7 @@ function EntryEditor(props) {
                       id="visibility"
                       name="visibility"
                       type="select"
-                      value={currentEntry.observations ? currentEntry.observations.visibility : -1}
+                      value={entry.observations ? entry.observations.visibility : -1}
                       onChange={handleChange}
                       disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'visibility' !== 'visibility')}
                     >
@@ -341,7 +341,7 @@ function EntryEditor(props) {
                       max="90"
                       min="-90"
                       step="0.00001"
-                      value={currentEntry.position ? currentEntry.position.latitude : ''}
+                      value={entry.position ? entry.position.latitude : ''}
                       onChange={handleChange}
                       disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'latitude' !== 'latitude')}
                     />
@@ -358,7 +358,7 @@ function EntryEditor(props) {
                       max="180"
                       min="-180"
                       step="0.00001"
-                      value={currentEntry.position ? currentEntry.position.longitude : ''}
+                      value={entry.position ? entry.position.longitude : ''}
                       onChange={handleChange}
                       disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'longitude' !== 'longitude')}
                     />
@@ -371,7 +371,7 @@ function EntryEditor(props) {
                       id="source"
                       name="source"
                       type="select"
-                      value={currentEntry.position ? currentEntry.position.source : ''}
+                      value={entry.position ? entry.position.source : ''}
                       onChange={handleChange}
                       disabled={isAddEntry ? false : !(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'source' !== 'source')}
                     >

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalHeader,
@@ -21,37 +21,42 @@ import {
 import { getSeaStates, getVisibility } from '../helpers/observations';
 
 function EntryEditor(props) {
+  // Taastan lokaalse state'i
+  const [entry, updateEntry] = useState({ ...props.entry });
+
   // Leia muudatused (Changes)
   let changes = [];
-  let currentEntry = props.entry;
-  // Lisa kaitse Add entry jaoks
-  const isAddEntry = currentEntry && !Number.isNaN(Number(currentEntry.ago));
+  let currentEntry = entry;
+  const isAddEntry = entry && !Number.isNaN(Number(entry.ago));
 
-  if (props.allEntries && currentEntry && !isAddEntry) {
-    // Leia ahela algus (originaalkirje)
-    let base = currentEntry;
+  if (props.allEntries && entry && !isAddEntry) {
+    let base = entry;
     while (base.amends) {
       const prev = props.allEntries.find(e => e.datetime === base.amends);
       if (!prev) break;
       base = prev;
     }
-    // Kogu ahel: originaalist kuni kõige uuemani
     let chain = [base];
     let next = props.allEntries.find(e => e.amends === base.datetime);
     while (next) {
       chain.push(next);
       next = props.allEntries.find(e => e.amends === next.datetime);
     }
-    // Kuvame ahela tagurpidi (uusim -> vanim)
     changes = [...chain].reverse();
-    // Kui on olemas muudatusi, kasuta kõige uuemat versiooni
     if (changes.length > 1) {
       currentEntry = changes[changes.length - 1];
     }
   }
 
-  // Kui entry puudub, ära renderda midagi
-  if (!currentEntry) {
+  // Kaitse: uuenda state'i ainult kui currentEntry muutub ja erineb entry'st
+  useEffect(() => {
+    if (currentEntry && JSON.stringify(currentEntry) !== JSON.stringify(entry)) {
+      updateEntry({ ...currentEntry });
+    }
+    // eslint-disable-next-line
+  }, [JSON.stringify(currentEntry)]);
+
+  if (!entry) {
     return <div>Loading...</div>;
   }
 

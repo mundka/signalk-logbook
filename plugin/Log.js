@@ -3,6 +3,7 @@ const {
   readdir,
   readFile,
   writeFile,
+  unlink,
 } = require('fs/promises');
 const { join, basename } = require('path');
 const { parse, stringify } = require('yaml');
@@ -169,6 +170,25 @@ class Log {
         }
         date.splice(entryIdx, 1);
         return this.writeDate(dateString, date);
+      });
+  }
+
+  deleteDate(dateString) {
+    if (!dateString.match(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/)) {
+      return Promise.reject(new Error('Invalid date format'));
+    }
+    const path = this.getPath(dateString);
+    return unlink(path)
+      .then(() => {
+        // File deleted successfully
+        return Promise.resolve();
+      })
+      .catch((error) => {
+        if (error.code === 'ENOENT') {
+          // File doesn't exist, but that's okay for deletion
+          return Promise.resolve();
+        }
+        return Promise.reject(error);
       });
   }
 

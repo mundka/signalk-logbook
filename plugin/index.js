@@ -411,6 +411,17 @@ module.exports = (app) => {
           res.sendStatus(204);
         }, (e) => handleError(e, res));
     });
+    router.delete('/logs/:date', (req, res) => {
+      const user = parseJwt(req.cookies.JAUTHENTICATION);
+      if (!user || !user.id) {
+        res.sendStatus(403);
+        return;
+      }
+      log.deleteDate(req.params.date)
+        .then(() => {
+          res.sendStatus(204);
+        }, (e) => handleError(e, res));
+    });
     router.get('/version', (req, res) => {
       res.json({ version: plugin.version });
     });

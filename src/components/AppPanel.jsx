@@ -12,6 +12,7 @@ import Metadata from './Metadata.jsx';
 import Timeline from './Timeline.jsx';
 import Logbook from './Logbook.jsx';
 import Map from './Map.jsx';
+import Service from './Service.jsx';
 import EntryEditor from './EntryEditor.jsx';
 import EntryViewer from './EntryViewer.jsx';
 
@@ -220,6 +221,11 @@ function AppPanel(props) {
                 Map
               </NavLink>
             </NavItem>
+            <NavItem>
+              <NavLink className={activeTab === 'service' ? 'active' : ''} onClick={() => setActiveTab('service')}>
+                Service
+              </NavLink>
+            </NavItem>
           </Nav>
           <TabContent activeTab={activeTab}>
             <TabPane tabId="timeline">
@@ -230,6 +236,9 @@ function AppPanel(props) {
             </TabPane>
             <TabPane tabId="map">
               { activeTab === 'map' ? <Map entries={data.entries} editEntry={setEditEntry} viewEntry={setViewEntry} /> : null }
+            </TabPane>
+            <TabPane tabId="service">
+              { activeTab === 'service' ? <Service displayTimeZone={timezone} onDataChange={() => setNeedsUpdate(true)} /> : null }
             </TabPane>
           </TabContent>
         </Col>

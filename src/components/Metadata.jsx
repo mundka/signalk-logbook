@@ -9,19 +9,15 @@ import {
 import ordinal from 'ordinal';
 import CrewEditor from './CrewEditor.jsx';
 import FilterEditor from './FilterEditor.jsx';
-import SailEditor from './SailEditor.jsx';
 
 function Metadata(props) {
-  const [editSails, setEditSails] = useState(false);
-  const [editFilter, setEditFilter] = useState(false);
   const [editCrew, setEditCrew] = useState(false);
+  const [editFilter, setEditFilter] = useState(false);
   const [crewNames, setCrew] = useState([]);
-  const [sails, setSails] = useState([]);
   const paths = [
     'communication.crewNames',
-    'sails.inventory.*',
   ];
-  const activeSails = sails.filter((s) => s.active);
+  const activeSails = []; // No longer fetching sails, so activeSails is empty
 
   function onMessage(m) {
     const delta = JSON.parse(m.data);
@@ -39,25 +35,6 @@ function Metadata(props) {
           }
           return;
         }
-        const updatedSails = [...sails];
-        const matched = v.path.match(/sails\.inventory\.([a-zA-Z0-9]+)/);
-        if (matched) {
-          const newSail = {
-            ...v.value,
-            id: matched[1],
-          };
-          const idx = updatedSails.findIndex((s) => s.id === matched[1]);
-          if (idx === -1) {
-            updatedSails.push(newSail);
-            setSails(updatedSails);
-            return;
-          }
-          if (JSON.stringify(newSail) === JSON.stringify(updatedSails[idx])) {
-            return;
-          }
-          updatedSails[idx] = newSail;
-          setSails(updatedSails);
-        }
       });
     });
   }
@@ -69,14 +46,6 @@ function Metadata(props) {
       .then((crew) => {
         if (JSON.stringify(crewNames) !== JSON.stringify(crew.value)) {
           setCrew(crew.value);
-          return Promise.reject(new Error('Skip'));
-        }
-        return fetch('/plugins/sailsconfiguration/sails');
-      })
-      .then((r) => r.json(), () => [])
-      .then((sailSettings) => {
-        if (sails.length === 0 && sailSettings.length > 0) {
-          setSails(sailSettings);
           return Promise.reject(new Error('Skip'));
         }
         return Promise.resolve();
@@ -101,24 +70,21 @@ function Metadata(props) {
       }
       ws.close();
     };
-  }, [sails, crewNames]);
+  }, [crewNames]);
 
-  function saveSails(updatedSails) {
-    const payload = updatedSails.map((s) => ({
-      id: s.id,
-      active: s.active,
-      reducedState: s.reducedState,
-    }));
-    fetch('/plugins/sailsconfiguration/sails', {
+  function saveCrew(updatedCrew) {
+    fetch('/signalk/v1/api/vessels/self/communication/crewNames', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        value: updatedCrew,
+      }),
     })
       .then(() => {
-        setEditSails(false);
-        setSails(updatedSails);
+        setEditCrew(false);
+        setCrew(updatedCrew);
         setTimeout(() => {
           // We want to reload with a slight delay
           props.setNeedsUpdate(true);
@@ -142,25 +108,6 @@ function Metadata(props) {
         props.setNeedsUpdate(true);
       });
   }
-  function saveCrew(updatedCrew) {
-    fetch('/signalk/v1/api/vessels/self/communication/crewNames', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        value: updatedCrew,
-      }),
-    })
-      .then(() => {
-        setEditCrew(false);
-        setCrew(updatedCrew);
-        setTimeout(() => {
-          // We want to reload with a slight delay
-          props.setNeedsUpdate(true);
-        }, 1000);
-      });
-  }
 
   return (
     <Row xs>
@@ -174,11 +121,6 @@ function Metadata(props) {
       cancel={() => setEditFilter(false)}
       daysToShow={props.daysToShow}
       save={saveFilter}
-        /> : null }
-    { editSails ? <SailEditor
-      sails={sails}
-      cancel={() => setEditSails(false)}
-      save={saveSails}
         /> : null }
     <Col>
     <List type="unstyled">
@@ -218,7 +160,7 @@ function Metadata(props) {
       return (
         <ListInlineItem
         key={sail.id}
-        onClick={() => setEditSails(true)}
+        onClick={() => {}} // No longer editable
         >
         {sail.name}{reduced}
         </ListInlineItem>
@@ -226,7 +168,7 @@ function Metadata(props) {
     })}
     {!activeSails.length
         && <Button
-      onClick={() => setEditSails(true)}
+      onClick={() => {}} // No longer editable
         >
         Edit
         </Button>

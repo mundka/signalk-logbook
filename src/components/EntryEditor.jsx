@@ -24,7 +24,33 @@ function EntryEditor(props) {
   const [entry, updateEntry] = useState({
     ...props.entry,
   });
-  
+
+  // Leia muudatused (Changes)
+  let changes = [];
+  let currentEntry = entry;
+  if (props.allEntries && entry) {
+    // Leia ahela algus (originaalkirje)
+    let base = entry;
+    while (base.amends) {
+      const prev = props.allEntries.find(e => e.datetime === base.amends);
+      if (!prev) break;
+      base = prev;
+    }
+    // Kogu ahel: originaalist kuni kõige uuemani
+    let chain = [base];
+    let next = props.allEntries.find(e => e.amends === base.datetime);
+    while (next) {
+      chain.push(next);
+      next = props.allEntries.find(e => e.amends === next.datetime);
+    }
+    // Kuvame ahela tagurpidi (uusim -> vanim)
+    changes = [...chain].reverse();
+    // Kui on olemas muudatusi, kasuta kõige uuemat versiooni
+    if (changes.length > 1) {
+      currentEntry = changes[changes.length - 1];
+    }
+  }
+
   // Update entry state when currentEntry changes
   useEffect(() => {
     if (currentEntry && currentEntry !== props.entry) {
@@ -117,36 +143,6 @@ function EntryEditor(props) {
   // Lisa utiliit, mis tuvastab automaatse logikirje
   function isAutomaticEntry(entry) {
     return entry && (entry.author === 'Automatic' || entry.text === 'Automatic log entry');
-  }
-
-  // Leia muudatused (Changes)
-  let changes = [];
-  let currentEntry = entry;
-  
-  if (props.allEntries && entry) {
-    // Leia ahela algus (originaalkirje)
-    let base = entry;
-    while (base.amends) {
-      const prev = props.allEntries.find(e => e.datetime === base.amends);
-      if (!prev) break;
-      base = prev;
-    }
-    
-    // Kogu ahel: originaalist kuni kõige uuemani
-    let chain = [base];
-    let next = props.allEntries.find(e => e.amends === base.datetime);
-    while (next) {
-      chain.push(next);
-      next = props.allEntries.find(e => e.amends === next.datetime);
-    }
-    
-    // Kuvame ahela tagurpidi (uusim -> vanim)
-    changes = [...chain].reverse();
-    
-    // Kui on olemas muudatusi, kasuta kõige uuemat versiooni
-    if (changes.length > 1) {
-      currentEntry = changes[changes.length - 1];
-    }
   }
 
   // Leia eelnevad logikirjed (Add entry puhul)

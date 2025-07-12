@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalHeader,
@@ -24,6 +24,15 @@ function EntryEditor(props) {
   const [entry, updateEntry] = useState({
     ...props.entry,
   });
+  
+  // Update entry state when currentEntry changes
+  useEffect(() => {
+    if (currentEntry && currentEntry !== props.entry) {
+      updateEntry({
+        ...currentEntry,
+      });
+    }
+  }, [currentEntry]);
 
   const fixTypes = [
     'GPS',
@@ -112,6 +121,8 @@ function EntryEditor(props) {
 
   // Leia muudatused (Changes)
   let changes = [];
+  let currentEntry = entry;
+  
   if (props.allEntries && entry) {
     // Leia ahela algus (originaalkirje)
     let base = entry;
@@ -120,6 +131,7 @@ function EntryEditor(props) {
       if (!prev) break;
       base = prev;
     }
+    
     // Kogu ahel: originaalist kuni kõige uuemani
     let chain = [base];
     let next = props.allEntries.find(e => e.amends === base.datetime);
@@ -127,8 +139,14 @@ function EntryEditor(props) {
       chain.push(next);
       next = props.allEntries.find(e => e.amends === next.datetime);
     }
+    
     // Kuvame ahela tagurpidi (uusim -> vanim)
     changes = [...chain].reverse();
+    
+    // Kui on olemas muudatusi, kasuta kõige uuemat versiooni
+    if (changes.length > 1) {
+      currentEntry = changes[changes.length - 1];
+    }
   }
 
   // Leia eelnevad logikirjed (Add entry puhul)
@@ -182,14 +200,14 @@ function EntryEditor(props) {
               placeholder="Tell what happened"
               value={entry.text}
               onChange={handleChange}
-              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'text' !== 'text')}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             />
           </FormGroup>
           {changes.length > 1 && (
             <FormGroup>
-              <Label>Changes</Label>
+              <Label>Previous versions</Label>
               <div style={{ border: '1px solid #eee', borderRadius: 4, padding: 8, background: '#fafbfc' }}>
-                {changes.map((c, idx) => (
+                {changes.slice(0, -1).map((c, idx) => (
                   <div key={c.datetime} style={{ marginBottom: 6 }}>
                     <div style={{ fontSize: '0.9em', color: '#888' }}>{new Date(c.datetime).toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</div>
                     <div style={{ fontWeight: 'bold' }}>{c.text}</div>
@@ -209,7 +227,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.text}
               onChange={handleChange}
-              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'text' !== 'text')}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'text' !== 'text')}
             >
               {agoOptions.map((ago) => (
               <option key={ago} value={ago}>{ago} minutes ago</option>
@@ -227,7 +245,7 @@ function EntryEditor(props) {
               type="select"
               value={entry.category}
               onChange={handleChange}
-              disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'category' !== 'category')}
+              disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'category' !== 'category')}
             >
               {props.categories.map((category) => (
               <option key={category} value={category}>{category}</option>
@@ -245,7 +263,7 @@ function EntryEditor(props) {
                   placeholder="16"
                   value={entry.vhf}
                   onChange={handleChange}
-                  disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'vhf' !== 'vhf')}
+                  disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'vhf' !== 'vhf')}
                 />
               </FormGroup>
           }
@@ -264,7 +282,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.seaState : -1}
                       onChange={handleChange}
-                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'seaState' !== 'seaState')}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'seaState' !== 'seaState')}
                     >
                       {seaStates.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -285,7 +303,7 @@ function EntryEditor(props) {
                         step="1"
                         value={entry.observations ? entry.observations.cloudCoverage : -1}
                         onChange={handleChange}
-                        disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'cloudCoverage' !== 'cloudCoverage')}
+                        disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'cloudCoverage' !== 'cloudCoverage')}
                       />
                       <InputGroupText>
                         {entry.observations
@@ -303,7 +321,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.observations ? entry.observations.visibility : -1}
                       onChange={handleChange}
-                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'visibility' !== 'visibility')}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'visibility' !== 'visibility')}
                     >
                       {visibility.map((description, idx) => (
                       <option key={idx} value={idx - 1}>{description}</option>
@@ -329,7 +347,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.latitude : ''}
                       onChange={handleChange}
-                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'latitude' !== 'latitude')}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'latitude' !== 'latitude')}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -346,7 +364,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position ? entry.position.longitude : ''}
                       onChange={handleChange}
-                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'longitude' !== 'longitude')}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'longitude' !== 'longitude')}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -359,7 +377,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.position ? entry.position.source : ''}
                       onChange={handleChange}
-                      disabled={!(isLatest && changes[changes.length-1]?.datetime === entry.datetime) || (isAutomaticEntry(entry) && 'source' !== 'source')}
+                      disabled={!(isLatest && changes[changes.length-1]?.datetime === currentEntry.datetime) || (isAutomaticEntry(currentEntry) && 'source' !== 'source')}
                     >
                       {fixTypes.map((fix) => (
                       <option key={fix} value={fix}>{fix}</option>

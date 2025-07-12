@@ -28,7 +28,10 @@ function EntryEditor(props) {
   // Leia muudatused (Changes)
   let changes = [];
   let currentEntry = entry;
-  if (props.allEntries && entry) {
+  // Lisa kaitse Add entry jaoks
+  const isAddEntry = entry && !Number.isNaN(Number(entry.ago));
+
+  if (props.allEntries && entry && !isAddEntry) {
     // Leia ahela algus (originaalkirje)
     let base = entry;
     while (base.amends) {

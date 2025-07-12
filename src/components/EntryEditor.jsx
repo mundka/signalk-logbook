@@ -392,7 +392,12 @@ function EntryEditor(props) {
             alert("Logikirje tekst ('Remarks') on kohustuslik!");
             return;
           }
-          props.save(entry);
+          // Kui tegemist on uue kirjega (Add entry), lisa datetime
+          let savingEntry = { ...entry };
+          if (!savingEntry.datetime) {
+            savingEntry.datetime = new Date().toISOString();
+          }
+          props.save(savingEntry);
         }}>
           Save
         </Button>{' '}

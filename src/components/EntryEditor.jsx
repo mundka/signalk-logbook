@@ -22,7 +22,7 @@ import { getSeaStates, getVisibility } from '../helpers/observations';
 
 function EntryEditor(props) {
   // Taastan lokaalse state'i
-  const [entry, updateEntry] = useState({ ...props.entry });
+  const [entry, updateEntry] = useState({ text: "", ...props.entry });
 
   // Leia muudatused (Changes)
   let changes = [];
@@ -387,7 +387,13 @@ function EntryEditor(props) {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={() => props.save(currentEntry)}>
+        <Button color="primary" onClick={() => {
+          if (!entry.text || entry.text.trim() === "") {
+            alert("Logikirje tekst ('Remarks') on kohustuslik!");
+            return;
+          }
+          props.save(entry);
+        }}>
           Save
         </Button>{' '}
         <Button color="secondary" onClick={props.cancel}>

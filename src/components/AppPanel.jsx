@@ -36,8 +36,29 @@ function AppPanel(props) {
   const [timezone, setTimezone] = useState('UTC');
   const [pluginVersion, setPluginVersion] = useState('');
   const [latestPosition, setLatestPosition] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(null);
 
   const loginStatus = props.loginStatus.status;
+
+  // Signal K navigation.position päring
+  useEffect(() => {
+    function fetchPosition() {
+      fetch('/signalk/v1/api/vessels/self/navigation/position')
+        .then(res => res.json())
+        .then(pos => {
+          if (pos && pos.value && typeof pos.value.latitude === 'number' && typeof pos.value.longitude === 'number') {
+            setCurrentPosition({
+              latitude: pos.value.latitude,
+              longitude: pos.value.longitude,
+              source: 'GPS'
+            });
+          }
+        });
+    }
+    fetchPosition();
+    const interval = setInterval(fetchPosition, 5000); // uuenda iga 5 sek järel
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!needsUpdate) {
@@ -237,10 +258,10 @@ function AppPanel(props) {
           </Nav>
           <TabContent activeTab={activeTab}>
             <TabPane tabId="timeline">
-              { activeTab === 'timeline' ? <Timeline entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: latestPosition })} /> : null }
+              { activeTab === 'timeline' ? <Timeline entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: currentPosition })} /> : null }
             </TabPane>
             <TabPane tabId="book">
-              { activeTab === 'book' ? <Logbook entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: latestPosition })} /> : null }
+              { activeTab === 'book' ? <Logbook entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: currentPosition })} /> : null }
             </TabPane>
             <TabPane tabId="map">
               { activeTab === 'map' ? <Map entries={data.entries} editEntry={setEditEntry} viewEntry={setViewEntry} /> : null }

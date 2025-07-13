@@ -380,7 +380,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position?.latitude ?? ''}
                       onChange={handleChange}
-                      readOnly={isAddEntryAgoNow}
+                      disabled={false}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -395,7 +395,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position?.longitude ?? ''}
                       onChange={handleChange}
-                      readOnly={isAddEntryAgoNow}
+                      disabled={false}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -406,7 +406,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.position?.source ?? ''}
                       onChange={handleChange}
-                      readOnly={isAddEntryAgoNow}
+                      disabled={false}
                     >
                       {fixTypes.map((fix) => (
                         <option key={fix} value={fix}>{fix}</option>

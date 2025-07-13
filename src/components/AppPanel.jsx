@@ -35,6 +35,7 @@ function AppPanel(props) {
   const [needsUpdate, setNeedsUpdate] = useState(true);
   const [timezone, setTimezone] = useState('UTC');
   const [pluginVersion, setPluginVersion] = useState('');
+  const [latestPosition, setLatestPosition] = useState(null);
 
   const loginStatus = props.loginStatus.status;
 
@@ -66,6 +67,13 @@ function AppPanel(props) {
               entries,
             });
             setNeedsUpdate(false);
+            // Leia viimane navigation kirje, millel on position
+            const navEntry = entries
+              .filter(e => e.category === 'navigation' && e.position && typeof e.position.latitude !== 'undefined' && typeof e.position.longitude !== 'undefined')
+              .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))[0];
+            if (navEntry) {
+              setLatestPosition({ ...navEntry.position });
+            }
           });
       });
     return () => {
@@ -229,10 +237,10 @@ function AppPanel(props) {
           </Nav>
           <TabContent activeTab={activeTab}>
             <TabPane tabId="timeline">
-              { activeTab === 'timeline' ? <Timeline entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation' })} /> : null }
+              { activeTab === 'timeline' ? <Timeline entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: latestPosition })} /> : null }
             </TabPane>
             <TabPane tabId="book">
-              { activeTab === 'book' ? <Logbook entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation' })} /> : null }
+              { activeTab === 'book' ? <Logbook entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: latestPosition })} /> : null }
             </TabPane>
             <TabPane tabId="map">
               { activeTab === 'map' ? <Map entries={data.entries} editEntry={setEditEntry} viewEntry={setViewEntry} /> : null }

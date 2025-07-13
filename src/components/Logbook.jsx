@@ -48,28 +48,22 @@ function buildAmendChains(entries) {
   // Map datetime -> entry
   const byId = {};
   entries.forEach(e => { byId[e.datetime] = e; });
-  // Map amends -> [chain]
-  const chains = [];
-  const used = new Set();
-  entries.forEach(entry => {
-    if (used.has(entry.datetime)) return;
-    // Leia chain (amend ahel)
-    let chain = [entry];
-    let cur = entry;
+  // Leia kõik chainide tipud (viimased muudatused)
+  const chainTops = entries.filter(e => !entries.some(x => x.amends === e.datetime));
+  // Ehita iga chaini jaoks ahel
+  const chains = chainTops.map(top => {
+    let chain = [top];
+    let cur = top;
     while (cur.amends) {
       const prev = byId[cur.amends];
       if (!prev) break;
       chain.unshift(prev);
-      used.add(prev.datetime);
       cur = prev;
     }
-    // Leia, kas keegi viitab sellele (on chaini osa)
-    let isAmended = entries.some(e => e.amends === entry.datetime);
-    if (!isAmended) {
-      chains.push(chain);
-      chain.forEach(e => used.add(e.datetime));
-    }
+    return chain;
   });
+  // Sorteeri uuemad ette
+  chains.sort((a, b) => new Date(b[b.length-1].datetime) - new Date(a[a.length-1].datetime));
   return chains;
 }
 
@@ -136,8 +130,10 @@ function Logbook(props) {
             {chain.length > 1 && openChains[idx] && chain.slice(0, -1).map((e, i) => (
               <tr key={e.datetime} style={{ background: '#f6f6f6', fontSize: '0.95em' }}>
                 <td></td>
-                <td colSpan={11} style={{ paddingLeft: 32 }}>
-                  <b>{e.date.toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</b> — {e.text}
+                <td colSpan={11} style={{ paddingLeft: 48, borderLeft: '3px solid #bbb' }}>
+                  <span style={{ color: '#888' }}>
+                    <b>{e.date.toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</b> — {e.text}
+                  </span>
                 </td>
               </tr>
             ))}

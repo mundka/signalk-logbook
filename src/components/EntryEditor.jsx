@@ -183,18 +183,31 @@ function EntryEditor(props) {
       return;
     }
     let savingEntry = { ...entry };
-    // Kui kategooria pole navigation, ära saada position objekti
     if (savingEntry.category !== 'navigation') {
       delete savingEntry.position;
     } else {
-      // Kui navigation, kontrolli et latitude ja longitude oleksid olemas ja numbrilised
-      if (!savingEntry.position || savingEntry.position.latitude === undefined || savingEntry.position.longitude === undefined || savingEntry.position.latitude === '' || savingEntry.position.longitude === '') {
-        alert("Palun sisesta asukoht (latitude ja longitude)! (DEBUG: " + JSON.stringify(savingEntry.position) + ")");
+      // Kui position puudub või on tühi, proovi võtta input-väljade väärtused
+      let lat = savingEntry.position?.latitude;
+      let lon = savingEntry.position?.longitude;
+      let source = savingEntry.position?.source;
+      if ((lat === undefined || lat === '') && document.getElementById('latitude')) {
+        lat = document.getElementById('latitude').value;
+      }
+      if ((lon === undefined || lon === '') && document.getElementById('longitude')) {
+        lon = document.getElementById('longitude').value;
+      }
+      if ((source === undefined || source === '') && document.getElementById('source')) {
+        source = document.getElementById('source').value;
+      }
+      if (!lat || !lon) {
+        alert("Palun sisesta asukoht (latitude ja longitude)!");
         return;
       }
-      // Teisenda numbriks
-      savingEntry.position.latitude = parseFloat(savingEntry.position.latitude);
-      savingEntry.position.longitude = parseFloat(savingEntry.position.longitude);
+      savingEntry.position = {
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lon),
+        source: source || 'GPS'
+      };
       if (isNaN(savingEntry.position.latitude) || isNaN(savingEntry.position.longitude)) {
         alert("Latitude ja longitude peavad olema numbrid!");
         return;

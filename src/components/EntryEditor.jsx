@@ -166,6 +166,10 @@ function EntryEditor(props) {
     return true;
   }
 
+  // Utility: kas Add entry ja ago > 0?
+  const isAddEntryAgoPast = isAddEntry && entry.ago && Number(entry.ago) > 0;
+  const isAddEntryAgoNow = isAddEntry && (!entry.ago || Number(entry.ago) === 0);
+
   function validateAndSave() {
     if (!entry.text || entry.text.trim() === "") {
       alert("Logikirje tekst ('Remarks') on kohustuslik!");
@@ -356,7 +360,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position?.latitude ?? ''}
                       onChange={handleChange}
-                      disabled={!isFieldEditable('latitude')}
+                      disabled={isAddEntryAgoNow}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -371,7 +375,7 @@ function EntryEditor(props) {
                       step="0.00001"
                       value={entry.position?.longitude ?? ''}
                       onChange={handleChange}
-                      disabled={!isFieldEditable('longitude')}
+                      disabled={isAddEntryAgoNow}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -382,7 +386,7 @@ function EntryEditor(props) {
                       type="select"
                       value={entry.position?.source ?? ''}
                       onChange={handleChange}
-                      disabled={!isFieldEditable('source')}
+                      disabled={isAddEntryAgoNow}
                     >
                       {fixTypes.map((fix) => (
                         <option key={fix} value={fix}>{fix}</option>

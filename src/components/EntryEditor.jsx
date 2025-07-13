@@ -30,7 +30,7 @@ function EntryEditor(props) {
         category: props.categories[0] || '',
         ago: 0,
         observations: {},
-        position: {},
+        position: props.entry && props.entry.position ? { ...props.entry.position } : {},
         ...props.entry,
       };
     } else {
@@ -46,7 +46,7 @@ function EntryEditor(props) {
         category: props.categories[0] || '',
         ago: 0,
         observations: {},
-        position: {},
+        position: props.entry && props.entry.position ? { ...props.entry.position } : {},
         ...props.entry,
       });
     } else {

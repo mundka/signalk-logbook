@@ -43,13 +43,18 @@ function AppPanel(props) {
   // Signal K navigation.position päring
   useEffect(() => {
     function fetchPosition() {
-      fetch('/signalk/v1/api/vessels/self/navigation/position')
+      fetch('/signalk/v1/api/vessels/self/')
         .then(res => res.json())
-        .then(pos => {
-          if (pos && pos.value && typeof pos.value.latitude === 'number' && typeof pos.value.longitude === 'number') {
+        .then(data => {
+          // navigation.position võib olla otse või nested
+          let pos = null;
+          if (data && data.navigation && data.navigation.position && data.navigation.position.value) {
+            pos = data.navigation.position.value;
+          }
+          if (pos && typeof pos.latitude === 'number' && typeof pos.longitude === 'number') {
             setCurrentPosition({
-              latitude: pos.value.latitude,
-              longitude: pos.value.longitude,
+              latitude: pos.latitude,
+              longitude: pos.longitude,
               source: 'GPS'
             });
           }

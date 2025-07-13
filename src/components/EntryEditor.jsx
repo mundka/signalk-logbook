@@ -55,6 +55,13 @@ function EntryEditor(props) {
     // eslint-disable-next-line
   }, [props.entry]);
 
+  // Lisa logi, et näha, mis väärtus on props.entry.position Add entry puhul
+  useEffect(() => {
+    if (isAddEntry) {
+      console.log('Add entry: props.entry.position =', props.entry && props.entry.position);
+    }
+  }, [isAddEntry, props.entry]);
+
   // Muudatuste ahel (amend chain)
   let changes = [];
   let currentEntry = entry;
@@ -182,7 +189,7 @@ function EntryEditor(props) {
     } else {
       // Kui navigation, kontrolli et latitude ja longitude oleksid olemas ja numbrilised
       if (!savingEntry.position || savingEntry.position.latitude === undefined || savingEntry.position.longitude === undefined || savingEntry.position.latitude === '' || savingEntry.position.longitude === '') {
-        alert("Palun sisesta asukoht (latitude ja longitude)!");
+        alert("Palun sisesta asukoht (latitude ja longitude)! (DEBUG: " + JSON.stringify(savingEntry.position) + ")");
         return;
       }
       // Teisenda numbriks

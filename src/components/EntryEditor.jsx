@@ -176,9 +176,16 @@ function EntryEditor(props) {
     if (savingEntry.category !== 'navigation') {
       delete savingEntry.position;
     } else {
-      // Kui navigation, kontrolli et latitude ja longitude oleksid olemas
+      // Kui navigation, kontrolli et latitude ja longitude oleksid olemas ja numbrilised
       if (!savingEntry.position || savingEntry.position.latitude === undefined || savingEntry.position.longitude === undefined || savingEntry.position.latitude === '' || savingEntry.position.longitude === '') {
         alert("Palun sisesta asukoht (latitude ja longitude)!");
+        return;
+      }
+      // Teisenda numbriks
+      savingEntry.position.latitude = parseFloat(savingEntry.position.latitude);
+      savingEntry.position.longitude = parseFloat(savingEntry.position.longitude);
+      if (isNaN(savingEntry.position.latitude) || isNaN(savingEntry.position.longitude)) {
+        alert("Latitude ja longitude peavad olema numbrid!");
         return;
       }
     }

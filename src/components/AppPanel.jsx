@@ -151,10 +151,9 @@ function AppPanel(props) {
       delete savingEntry.point;
       delete savingEntry.date;
       delete savingEntry.signatureValid;
-      fetch('/plugins/signalk-logbook/logs', {
-        method: 'POST',
+      fetch(`/plugins/signalk-logbook/logs/${entry.datetime.substr(0, 10)}/${entry.datetime}`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
         },
         body: JSON.stringify(savingEntry),
       })

@@ -18,11 +18,17 @@ import {
 } from 'reactstrap';
 import { getSeaStates, getVisibility } from '../helpers/observations';
 
+// Helpers for defaults from live data
+function ms2kt(ms){ return ms!=null && !isNaN(ms) ? Number((ms*1.94384).toFixed(1)) : null; }
+function visIndexFromMeters(m){ const NM=1852; if(m==null||isNaN(m)) return null; if(m<45) return 1; if(m<180) return 2; if(m<360) return 3; if(m<0.5*NM) return 4; if(m<1*NM) return 5; if(m<2*NM) return 6; if(m<5*NM) return 7; if(m<10*NM) return 8; if(m<30*NM) return 9; return 10; }
+function beaufortFromWind(kn){ if(kn==null||isNaN(kn)) return null; const k=Number(kn); if(k<=1) return 0; if(k<=3) return 1; if(k<=6) return 2; if(k<=10) return 3; if(k<=16) return 4; if(k<=21) return 5; if(k<=27) return 6; if(k<=33) return 7; if(k<=40) return 8; if(k<=47) return 9; if(k<=55) return 10; if(k<=63) return 11; return 12; }
+
 function EntryEditor(props) {
   // Kas tegemist on uue kirjega?
   const isAddEntry = props.entry && props.entry.ago !== undefined;
 
   // Lokaalne state: alati props.entry põhjal, kuid Add entry puhul vaikimisi väärtused
+  const [live, setLive] = useState({});
   const [entry, setEntry] = useState(() => {
     if (isAddEntry) {
       return {
@@ -54,6 +60,57 @@ function EntryEditor(props) {
     }
     // eslint-disable-next-line
   }, [props.entry]);
+
+  useEffect(() => {
+    fetch(`${window.location.origin}/signalk/v1/api/vessels/self`, { credentials: 'same-origin' })
+      .then(r=>r.json())
+      .then(data=>{
+        const env = (data && data.environment) || {};
+        const wind = env.wind || {};
+        const pressure = data?.environment?.outside?.pressure?.value;
+        const visMeters = data?.environment?.outside?.visibility?.value;
+        const windMs = wind.speedTrue?.value ?? wind.speedApparent?.value ?? wind.speedOverGround?.value;
+        const windDir = wind.directionTrue?.value ?? wind.directionMagnetic?.value;
+        const windKn = ms2kt(windMs);
+        const liveVals = {
+          windSpeed: windKn,
+          windDirection: (windDir!=null)? Math.round((Number(windDir)*180/Math.PI+360)%360) : null,
+          barometer: (pressure!=null)? (Number(pressure)>2000? Number((Number(pressure)/100).toFixed(2)) : Number(Number(pressure).toFixed(2))) : null,
+          sog: ms2kt(data?.navigation?.speedOverGround?.value),
+          stw: ms2kt(data?.navigation?.speedThroughWater?.value),
+          cog: data?.navigation?.courseOverGroundTrue?.value!=null ? Math.round((Number(data.navigation.courseOverGroundTrue.value)*180/Math.PI+360)%360) : null,
+          hdt: data?.navigation?.headingTrue?.value!=null ? Math.round((Number(data.navigation.headingTrue.value)*180/Math.PI+360)%360) : null,
+          depth: data?.environment?.depth?.belowTransducer?.value ?? null,
+          waterTemp: data?.environment?.water?.temperature?.value!=null ? Number(data.environment.water.temperature.value - 273.15).toFixed(1) : null,
+          logNm: (data?.navigation?.log?.value!=null) ? Number((Number(data.navigation.log.value)/1852).toFixed(1)) : null,
+        };
+        setLive(liveVals);
+        if (isAddEntry) {
+          setEntry(prev=>{
+            const upd = { ...prev };
+            if (windKn!=null || windDir!=null){
+              upd.wind = { ...(upd.wind||{}) };
+              if (windKn!=null) upd.wind.speed = windKn;
+              if (windDir!=null) {
+                const deg = Math.round((Number(windDir)*180/Math.PI+360)%360);
+                upd.wind.direction = deg;
+              }
+            }
+            upd.observations = { ...(upd.observations||{}) };
+            if (upd.observations.seaState==null && windKn!=null) upd.observations.seaState = beaufortFromWind(windKn);
+            const visIdx = visIndexFromMeters(visMeters);
+            if (upd.observations.visibility==null && visIdx!=null) upd.observations.visibility = visIdx;
+            if (pressure!=null) {
+              const pa = Number(pressure);
+              upd.barometer = pa>2000? Number((pa/100).toFixed(2)) : Number(pa.toFixed(2));
+            }
+            const navLog = (data?.navigation?.log?.value!=null ? data.navigation.log.value : data?.navigation?.trip?.log?.value);
+            if (navLog!=null) upd.log = Number((Number(navLog)/1852).toFixed(1));
+            return upd;
+          });
+        }
+      });
+  }, [isAddEntry, props.entry]);
 
   // Lisa logi, et näha, mis väärtus on props.entry.position Add entry puhul
   useEffect(() => {
@@ -169,7 +226,7 @@ function EntryEditor(props) {
   function isFieldEditable(field) {
     if (isAddEntry) return true;
     if (isAutomaticEntry(currentEntry)) return false;
-    if (!isLatest) return false;
+    // Allow editing even if not the latest; saving creates an amendment
     return true;
   }
 
@@ -251,6 +308,19 @@ function EntryEditor(props) {
               disabled={!isFieldEditable('text')}
             />
           </FormGroup>
+          <div style={{borderTop:'1px solid #eee', marginTop:12, paddingTop:12}}>
+            <div style={{fontWeight:'bold', marginBottom:8}}>Live readings</div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:8}}>
+              <div>Wind: {live.windSpeed!=null? `${live.windSpeed} kt`:'n/a'} {live.windDirection!=null? `(${live.windDirection}°)`:''}</div>
+              <div>Baro: {live.barometer!=null? `${live.barometer} hPa`:'n/a'}</div>
+              <div>Log: {live.logNm!=null? `${live.logNm} NM`:'n/a'}</div>
+              <div>SOG/STW: {live.sog!=null? `${live.sog} /`:''} {live.stw!=null? `${live.stw} kt`:''}</div>
+              <div>COG/HDT: {live.cog!=null? `${live.cog}° /`:''} {live.hdt!=null? `${live.hdt}°`:''}</div>
+              <div>Depth: {live.depth!=null? `${live.depth} m`:'n/a'}</div>
+              <div>Water temp: {live.waterTemp!=null? `${live.waterTemp} °C`:'n/a'}</div>
+            </div>
+          </div>
+
           {changes.length > 1 && (
             <FormGroup>
               <Label>Previous versions</Label>

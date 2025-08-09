@@ -1,6 +1,6 @@
 const ALLOWED_ENTRY_FIELDS = [
-  'datetime', 'position', 'log', 'waypoint', 'heading', 'course', 'speed', 'barometer', 'wind',
-  'observations', 'engine', 'vhf', 'crewNames', 'end', 'text', 'author', 'category'
+  "datetime", "amends", "position", "log", "waypoint", "heading", "course", "speed", "barometer", "wind",
+  "observations", "engine", "vhf", "crewNames", "end", "text", "author", "category"
 ];
 function stripDisallowedFields(entry) {
   if (!entry) return entry;
@@ -11,4 +11,4 @@ function stripDisallowedFields(entry) {
   });
   return entry;
 }
-module.exports = { stripDisallowedFields, ALLOWED_ENTRY_FIELDS }; 
+module.exports = { stripDisallowedFields, ALLOWED_ENTRY_FIELDS };

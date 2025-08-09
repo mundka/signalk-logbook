@@ -68,7 +68,7 @@ function buildAmendChains(entries) {
 }
 
 function Logbook(props) {
-  const [openChains, setOpenChains] = useState({});
+  // chains are always expanded; no toggle state
   const entries = props.entries.map((entry) => ({
     ...entry,
     point: entry.position ? new Point(entry.position.latitude, entry.position.longitude) : null,
@@ -77,12 +77,11 @@ function Logbook(props) {
   // Ehita amend chainid
   const chains = buildAmendChains(entries);
 
-  function toggleChain(idx) {
-    setOpenChains(prev => ({ ...prev, [idx]: !prev[idx] }));
-  }
+  // toggle removed; histories are always shown
 
   return (
     <div>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}><div style={{fontWeight:'bold'}}>Logbook</div><Button color="primary" onClick={props.addEntry}>Add entry</Button></div>
       <Table striped hover responsive>
         <thead>
           <tr>
@@ -94,7 +93,7 @@ function Logbook(props) {
             <th>Baro</th>
             <th>Coordinates</th>
             <th>Fix</th>
-            <th>Log</th>
+            <th>speed</th>
             <th>Engine</th>
             <th>By</th>
             <th>Remarks</th>
@@ -105,8 +104,8 @@ function Logbook(props) {
           const last = chain[chain.length - 1];
           return <React.Fragment key={last.datetime}>
             <tr onClick={() => props.editEntry(last)}>
-              <td style={{ cursor: chain.length > 1 ? 'pointer' : 'default' }} onClick={e => { e.stopPropagation(); if (chain.length > 1) toggleChain(idx); }}>
-                {chain.length > 1 ? (openChains[idx] ? <FaChevronDown /> : <FaChevronRight />) : null}
+              <td>
+                
               </td>
               <td>{last.date.toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</td>
               <td>{getCourse(last)}</td>
@@ -115,7 +114,7 @@ function Logbook(props) {
               <td>{last.barometer}</td>
               <td>{last.point ? last.point.toString() : 'n/a'}</td>
               <td>{last.position ? last.position.source || 'GPS' : ''}</td>
-              <td>{!Number.isNaN(Number(last.log)) ? `${last.log}NM` : ''}</td>
+              <td>{last.speed && !Number.isNaN(Number(last.speed.sog || last.speed.stw)) ? `${Number(last.speed.sog || last.speed.stw)}kt` : ''}</td>
               <td>{last.engine && !Number.isNaN(Number(last.engine.hours)) ? `${last.engine.hours}h` : ''}</td>
               <td>
                 {last.author || 'auto'}
@@ -127,7 +126,7 @@ function Logbook(props) {
               </td>
               <td>{last.text}</td>
             </tr>
-            {chain.length > 1 && openChains[idx] && chain.slice(0, -1).map((e, i) => (
+            {chain.length > 1 && chain.slice(0, -1).map((e, i) => (
               <tr key={e.datetime} style={{ background: '#f6f6f6', fontSize: '0.95em' }}>
                 <td></td>
                 <td colSpan={11} style={{ paddingLeft: 48, borderLeft: '3px solid #bbb' }}>

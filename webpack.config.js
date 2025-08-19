@@ -27,9 +27,8 @@ module.exports = {
       {
         test: /\.jsx?$/,
         loader: 'babel-loader',
-        exclude: /node_modules/,
         options: {
-          presets: ['@babel/preset-react'],
+          presets: [['@babel/preset-env'], ['@babel/preset-react']],
         },
       },
       {
@@ -56,7 +55,7 @@ module.exports = {
       library: { type: 'var', name: packageJson.name.replace(/[-@/]/g, '_') },
       filename: 'remoteEntry.js',
       exposes: {
-        './AppPanel': './src/components/AppPanel',
+        './AppPanel': './src/components/AppPanel.jsx',
       },
       shared: [
         {

@@ -1,6 +1,5 @@
 {
   "name": "signalk-logbook",
-  "version": "0.7.98",
   "description": "Semi-automatic electronic logbook for Signal K",
   "main": "plugin/index.js",
   "scripts": {

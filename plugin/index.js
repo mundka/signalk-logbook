@@ -166,17 +166,29 @@ module.exports = (app) => {
       };
     }, 60000);
 
-    // Automaatne logikirje iga 5 minuti järel
+    // Automatic log entry every 5 minutes
     if (enableAutoLogging) {
       autoInterval = setInterval(() => {
         // Always use the current time for a unique datetime
         const now = new Date();
         const author = { name: 'Automatic', role: 'System' };
         // Clone the current state and set a unique datetime
-        const entryState = { ...state, 'navigation.datetime': now.toISOString() };
+        // Get current data from SignalK
+        const currentState = {};
+        paths.forEach((path) => {
+          try {
+            const value = app.getSelfPath(path).value;
+            if (value !== undefined) {
+              currentState[path] = value;
+            }
+          } catch (e) {
+            // Path doesn't exist, skip it
+          }
+        });
+        const entryState = { ...currentState, 'navigation.datetime': now.toISOString() };
         let entry = stateToEntry(entryState, 'Automatic log entry', author);
         const dateString = now.toISOString().substr(0, 10);
-        // Eemalda audit enne salvestamist
+        // Remove audit before saving
         entry = stripDisallowedFields(entry);
         if (app.debug) app.debug('[AUTO] About to save automatic log entry:', entry);
         else app.error('[AUTO] About to save automatic log entry:', entry);
@@ -463,16 +475,16 @@ module.exports = (app) => {
       autoLogInterval: {
         type: 'number',
         default: 5,
-        title: 'Automaatse logikirje intervall (minutites)',
-        description: 'Kui sageli salvestatakse automaatseid logikirjeid',
+        title: 'Automatic log entry interval (minutes)',
+        description: 'How often automatic log entries are saved',
         minimum: 1,
         maximum: 60,
       },
       enableAutoLogging: {
         type: 'boolean',
         default: true,
-        title: 'Luba automaatne logikirje',
-        description: 'Kas salvestada automaatseid logikirjeid',
+        title: 'Enable automatic log entry',
+        description: 'Whether to save automatic log entries',
       },
     },
   };

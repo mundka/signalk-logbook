@@ -91,7 +91,6 @@ function Logbook(props) {
             <th>Course</th>
             <th>Speed</th>
             <th>Weather</th>
-            <th>Baro</th>
             <th>Coordinates</th>
             <th>Fix</th>
             <th>Log</th>
@@ -112,7 +111,6 @@ function Logbook(props) {
               <td>{getCourse(last)}</td>
               <td>{last.speed && !Number.isNaN(Number(last.speed.sog)) ? `${last.speed.sog}kt` : ''}</td>
               <td>{getWeather(last)}</td>
-              <td>{last.barometer}</td>
               <td>{last.point ? last.point.toString() : 'n/a'}</td>
               <td>{last.position ? last.position.source || 'GPS' : ''}</td>
               <td>{!Number.isNaN(Number(last.log)) ? `${last.log}NM` : ''}</td>

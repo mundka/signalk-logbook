@@ -13,6 +13,7 @@ import Timeline from './Timeline.jsx';
 import Logbook from './Logbook.jsx';
 import Map from './Map.jsx';
 import Service from './Service.jsx';
+import Reports from './Reports.jsx';
 import EntryEditor from './EntryEditor.jsx';
 import EntryViewer from './EntryViewer.jsx';
 
@@ -151,8 +152,8 @@ function AppPanel(props) {
       delete savingEntry.point;
       delete savingEntry.date;
       delete savingEntry.signatureValid;
-      fetch('/plugins/signalk-logbook/logs', {
-        method: 'POST',
+      fetch(`/plugins/signalk-logbook/logs/${entry.datetime.substr(0, 10)}/${entry.datetime}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -260,6 +261,11 @@ function AppPanel(props) {
                 Service
               </NavLink>
             </NavItem>
+                      <NavItem>
+              <NavLink className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
+                Reports
+              </NavLink>
+            </NavItem>
           </Nav>
           <TabContent activeTab={activeTab}>
             <TabPane tabId="timeline">
@@ -273,6 +279,9 @@ function AppPanel(props) {
             </TabPane>
             <TabPane tabId="service">
               { activeTab === 'service' ? <Service displayTimeZone={timezone} onDataChange={() => setNeedsUpdate(true)} /> : null }
+            </TabPane>
+            <TabPane tabId="reports">
+              { activeTab === 'reports' ? <Reports displayTimeZone={timezone} /> : null }
             </TabPane>
           </TabContent>
         </Col>

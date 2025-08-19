@@ -1,6 +1,6 @@
 {
   "name": "signalk-logbook",
-  "version": "0.7.94",
+  "version": "0.7.98",
   "description": "Semi-automatic electronic logbook for Signal K",
   "main": "plugin/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/meri-imperiumi/signalk-logbook.git"
+    "url": "git://github.com/mundka/signalk-logbook.git"
   },
   "keywords": [
     "signalk-node-server-plugin",
@@ -24,9 +24,9 @@
   "author": "Henri Bergius <henri.bergius@iki.fi>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/meri-imperiumi/signalk-logbook/issues"
+    "url": "https://github.com/mundka/signalk-logbook/issues"
   },
-  "homepage": "https://github.com/meri-imperiumi/signalk-logbook#readme",
+  "homepage": "https://github.com/mundka/signalk-logbook#readme",
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@babel/preset-react": "^7.18.6",
@@ -58,8 +58,10 @@
     "access": "public"
   },
   "dependencies": {
+    "@babel/preset-env": "^7.28.0",
     "@mapbox/geo-viewport": "^0.5.0",
     "circular-buffer": "^1.0.3",
+    "js-yaml": "^4.1.0",
     "jsonschema": "^1.4.1",
     "ordinal": "^1.0.3",
     "react-icons": "^5.5.0",

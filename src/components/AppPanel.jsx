@@ -7,9 +7,9 @@ import {
   NavLink,
   TabContent,
   TabPane,
+  Button,
 } from 'reactstrap';
 import Metadata from './Metadata.jsx';
-import Timeline from './Timeline.jsx';
 import Logbook from './Logbook.jsx';
 import Map from './Map.jsx';
 import Service from './Service.jsx';
@@ -28,7 +28,7 @@ function AppPanel(props) {
   const [data, setData] = useState({
     entries: [],
   });
-  const [activeTab, setActiveTab] = useState('timeline'); // Maybe timeline on mobile, book on desktop?
+  const [activeTab, setActiveTab] = useState('book'); // Default to logbook view
   const [daysToShow, setDaysToShow] = useState(7);
   const [editEntry, setEditEntry] = useState(null);
   const [viewEntry, setViewEntry] = useState(null);
@@ -38,6 +38,7 @@ function AppPanel(props) {
   const [pluginVersion, setPluginVersion] = useState('');
   const [latestPosition, setLatestPosition] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
 
   const loginStatus = props.loginStatus.status;
 
@@ -140,6 +141,45 @@ function AppPanel(props) {
       });
   }, []);
 
+  // Fetch user information and role
+  useEffect(() => {
+    if (loginStatus === 'loggedIn') {
+      fetch('/signalk/v1/auth/user')
+        .then((r) => r.json())
+        .then((user) => {
+          setUserInfo(user);
+        })
+        .catch((err) => {
+          console.log('Could not fetch user info:', err);
+        });
+    }
+  }, [loginStatus]);
+
+  // Role-based access control functions
+  const getUserRole = () => {
+    return userInfo?.role || userInfo?.type || 'crew';
+  };
+
+  const canWriteEntries = () => {
+    const role = getUserRole().toLowerCase();
+    return ['admin', 'captain', 'chief officer', 'officer', 'engineer'].includes(role);
+  };
+
+  const canDeleteEntries = () => {
+    const role = getUserRole().toLowerCase();
+    return ['admin', 'captain', 'chief officer'].includes(role);
+  };
+
+  const canAccessReports = () => {
+    const role = getUserRole().toLowerCase();
+    return ['admin', 'captain', 'chief officer', 'officer', 'engineer'].includes(role);
+  };
+
+  const canAccessService = () => {
+    const role = getUserRole().toLowerCase();
+    return ['admin', 'captain', 'chief officer', 'engineer'].includes(role);
+  };
+
   function saveEntry(entry) {
     // Kui tegemist on muudatusega (edit), loo amendment POST päringuga
     const isEdit = !!entry.datetime && !Number.isNaN(Date.parse(entry.datetime));
@@ -212,37 +252,36 @@ function AppPanel(props) {
         daysToShow={daysToShow}
         setDaysToShow={setDaysToShow}
         setNeedsUpdate={setNeedsUpdate}
+        userInfo={userInfo}
       />
       <Row>
-        { editEntry ? <EntryEditor
+        { editEntry && canWriteEntries() ? <EntryEditor
           entry={editEntry}
           cancel={() => setEditEntry(null)}
           save={saveEntry}
-          delete={deleteEntry}
+          delete={canDeleteEntries() ? deleteEntry : null}
           categories={categories}
           displayTimeZone={timezone}
           allEntries={data.entries}
+          userRole={getUserRole()}
           /> : null }
         { viewEntry ? <EntryViewer
           entry={viewEntry}
-          editEntry={setEditEntry}
+          editEntry={canWriteEntries() ? setEditEntry : null}
           cancel={() => setViewEntry(null)}
           categories={categories}
           displayTimeZone={timezone}
+          userRole={getUserRole()}
           /> : null }
-        { addEntry ? <EntryEditor
+        { addEntry && canWriteEntries() ? <EntryEditor
           entry={addEntry}
           cancel={() => setAddEntry(null)}
           save={saveAddEntry}
           categories={categories}
+          userRole={getUserRole()}
           /> : null }
         <Col className="bg-light border">
           <Nav tabs>
-            <NavItem>
-              <NavLink className={activeTab === 'timeline' ? 'active' : ''} onClick={() => setActiveTab('timeline')}>
-                Timeline
-              </NavLink>
-            </NavItem>
             <NavItem>
               <NavLink className={activeTab === 'book' ? 'active' : ''} onClick={() => {
                 setActiveTab('book');
@@ -256,38 +295,67 @@ function AppPanel(props) {
                 Map
               </NavLink>
             </NavItem>
-            <NavItem>
-              <NavLink className={activeTab === 'service' ? 'active' : ''} onClick={() => setActiveTab('service')}>
-                Service
-              </NavLink>
-            </NavItem>
-                      <NavItem>
-              <NavLink className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
-                Reports
-              </NavLink>
-            </NavItem>
+            {canAccessService() && (
+              <NavItem>
+                <NavLink className={activeTab === 'service' ? 'active' : ''} onClick={() => setActiveTab('service')}>
+                  Service
+                </NavLink>
+              </NavItem>
+            )}
+            {canAccessReports() && (
+              <NavItem>
+                <NavLink className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
+                  Reports
+                </NavLink>
+              </NavItem>
+            )}
           </Nav>
           <TabContent activeTab={activeTab}>
-            <TabPane tabId="timeline">
-              { activeTab === 'timeline' ? <Timeline entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: currentPosition })} /> : null }
-            </TabPane>
             <TabPane tabId="book">
-              { activeTab === 'book' ? <Logbook entries={data.entries} displayTimeZone={timezone} editEntry={setEditEntry} addEntry={() => setAddEntry({ ago: 0, category: 'navigation', position: currentPosition })} /> : null }
+              { activeTab === 'book' ? <Logbook 
+                entries={data.entries} 
+                displayTimeZone={timezone} 
+                editEntry={canWriteEntries() ? setEditEntry : null} 
+                addEntry={canWriteEntries() ? () => setAddEntry({ ago: 0, category: 'navigation', position: currentPosition }) : null}
+                userRole={getUserRole()}
+                canWrite={canWriteEntries()}
+              /> : null }
             </TabPane>
             <TabPane tabId="map">
-              { activeTab === 'map' ? <Map entries={data.entries} editEntry={setEditEntry} viewEntry={setViewEntry} /> : null }
+              { activeTab === 'map' ? <Map 
+                entries={data.entries} 
+                editEntry={canWriteEntries() ? setEditEntry : null} 
+                viewEntry={setViewEntry}
+                userRole={getUserRole()}
+              /> : null }
             </TabPane>
-            <TabPane tabId="service">
-              { activeTab === 'service' ? <Service displayTimeZone={timezone} onDataChange={() => setNeedsUpdate(true)} /> : null }
-            </TabPane>
-            <TabPane tabId="reports">
-              { activeTab === 'reports' ? <Reports displayTimeZone={timezone} /> : null }
-            </TabPane>
+            {canAccessService() && (
+              <TabPane tabId="service">
+                { activeTab === 'service' ? <Service 
+                  displayTimeZone={timezone} 
+                  onDataChange={() => setNeedsUpdate(true)}
+                  userRole={getUserRole()}
+                /> : null }
+              </TabPane>
+            )}
+            {canAccessReports() && (
+              <TabPane tabId="reports">
+                { activeTab === 'reports' ? <Reports 
+                  displayTimeZone={timezone}
+                  userRole={getUserRole()}
+                /> : null }
+              </TabPane>
+            )}
           </TabContent>
         </Col>
       </Row>
-      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff' }}>
-        Plugin version {pluginVersion || '...'} (live test)
+      <div style={{ fontFamily: 'monospace', fontSize: '1.2em', color: '#007bff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Plugin version {pluginVersion || '...'} (live test)</span>
+        {userInfo && (
+          <span style={{ fontSize: '0.9em', color: '#28a745' }}>
+            👤 {userInfo.id || 'Unknown'} ({getUserRole()})
+          </span>
+        )}
       </div>
     </div>
   );

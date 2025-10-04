@@ -57,7 +57,7 @@ module.exports = (app) => {
   plugin.id = 'signalk-logbook';
   plugin.name = 'Logbook';
   plugin.description = 'Semi-automatic electronic logbook for sailing vessels';
-  plugin.version = '1.0.4';
+  plugin.version = '1.1.0';
 
   const setStatus = app.setPluginStatus || app.setProviderStatus;
 
@@ -281,6 +281,8 @@ module.exports = (app) => {
     router.post('/logs', (req, res) => {
       res.contentType('application/json');
       const user = parseJwt(req.cookies.JAUTHENTICATION);
+      if (!ensureLogInitialized(res)) return;
+
       if (!user || !user.id) {
         res.sendStatus(403);
         return;
@@ -358,6 +360,8 @@ module.exports = (app) => {
       log.getDate(req.params.date)
         .then((date) => {
           // Eemalda signatureValid ja muud skeemivälised väljad
+      if (!ensureLogInitialized(res)) return;
+
           const cleaned = date.map(stripDisallowedFields);
           res.send(JSON.stringify(cleaned));
         }, (e) => handleError(e, res));
@@ -369,6 +373,8 @@ module.exports = (app) => {
         return;
       }
       log.getEntry(req.params.entry)
+      if (!ensureLogInitialized(res)) return;
+
         .then((entry) => {
           // Eemalda signatureValid ja muud skeemivälised väljad
           res.send(JSON.stringify(stripDisallowedFields(entry)));
@@ -379,6 +385,8 @@ module.exports = (app) => {
       const user = parseJwt(req.cookies.JAUTHENTICATION);
       if (!user || !user.id) {
         res.sendStatus(403);
+      if (!ensureLogInitialized(res)) return;
+
         return;
       }
       if (req.params.entry.substr(0, 10) !== req.params.date) {
@@ -415,6 +423,8 @@ module.exports = (app) => {
       const user = parseJwt(req.cookies.JAUTHENTICATION);
       if (!user || !user.id) {
         res.sendStatus(403);
+      if (!ensureLogInitialized(res)) return;
+
         return;
       }
       if (req.params.entry.substr(0, 10) !== req.params.date) {
@@ -430,6 +440,7 @@ module.exports = (app) => {
       const user = parseJwt(req.cookies.JAUTHENTICATION);
       if (!user || !user.id) {
         res.sendStatus(403);
+
         return;
       }
       log.deleteDate(req.params.date)

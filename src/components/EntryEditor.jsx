@@ -36,8 +36,8 @@ function EntryEditor(props) {
         category: props.categories[0] || '',
         ago: 0,
         observations: {},
-        position: props.entry && props.entry.position ? { ...props.entry.position } : {},
         ...props.entry,
+        position: (props.entry && props.entry.position) ? { ...props.entry.position } : { latitude: 52.51117, longitude: 13.19329, source: 'GPS' },
       };
     } else {
       return { ...props.entry };
@@ -52,8 +52,8 @@ function EntryEditor(props) {
         category: props.categories[0] || '',
         ago: 0,
         observations: {},
-        position: props.entry && props.entry.position ? { ...props.entry.position } : {},
         ...props.entry,
+        position: (props.entry && props.entry.position) ? { ...props.entry.position } : { latitude: 52.51117, longitude: 13.19329, source: 'GPS' },
       });
     } else {
       setEntry({ ...props.entry });
@@ -247,16 +247,11 @@ function EntryEditor(props) {
       let lat = savingEntry.position?.latitude;
       let lon = savingEntry.position?.longitude;
       let source = savingEntry.position?.source;
-      if ((lat === undefined || lat === '') && document.getElementById('latitude')) {
-        lat = document.getElementById('latitude').value;
-      }
-      if ((lon === undefined || lon === '') && document.getElementById('longitude')) {
-        lon = document.getElementById('longitude').value;
-      }
+      // Use position from entry state (should be properly initialized now)
       if ((source === undefined || source === '') && document.getElementById('source')) {
         source = document.getElementById('source').value;
       }
-      if (!lat || !lon) {
+      if (lat === undefined || lat === null || lat === '' || lon === undefined || lon === null || lon === '') {
         alert("Palun sisesta asukoht (latitude ja longitude)!");
         return;
       }
@@ -284,6 +279,19 @@ function EntryEditor(props) {
           : `Log entry ${new Date(currentEntry.date || currentEntry.datetime).toLocaleString('en-GB', { timeZone: props.displayTimeZone })} by ${currentEntry.author || 'auto'}`}
       </ModalHeader>
       <ModalBody>
+        <div className="d-flex justify-content-start align-items-center mb-3">
+          {props.categories.map((category) => (
+            <Button
+              key={category}
+              color={entry.category === category ? 'primary' : 'outline-primary'}
+              size="sm"
+              className="me-2"
+              onClick={() => setEntry(prev => ({ ...prev, category }))}
+            >
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </Button>
+          ))}
+        </div>
         <Form>
           <FormGroup>
             <Label for="text">Remarks</Label>
@@ -350,21 +358,6 @@ function EntryEditor(props) {
               </Input>
             </FormGroup>
           )}
-          <FormGroup>
-            <Label for="category">Category</Label>
-            <Input
-              id="category"
-              name="category"
-              type="select"
-              value={entry.category || ''}
-              onChange={handleChange}
-              disabled={!isFieldEditable('category')}
-            >
-              {props.categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </Input>
-          </FormGroup>
           {entry.category === 'radio' && (
             <FormGroup>
               <Label for="vhf">VHF channel</Label>

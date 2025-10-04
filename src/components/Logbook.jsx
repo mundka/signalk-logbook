@@ -4,7 +4,7 @@ import {
   Button,
 } from 'reactstrap';
 import { Point } from 'where';
-import { FaExclamationTriangle, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { FaExclamationTriangle, FaChevronDown, FaChevronRight, FaCompass, FaCog, FaBroadcastTower, FaWrench } from 'react-icons/fa';
 
 function getWeather(entry) {
   const weather = [];
@@ -44,6 +44,21 @@ function getCourse(entry) {
   return '';
 }
 
+function getCategoryIcon(category) {
+  switch (category) {
+    case 'navigation':
+      return <FaCompass style={{ color: '#007bff' }} title="Navigation" />;
+    case 'engine':
+      return <FaCog style={{ color: '#28a745' }} title="Engine" />;
+    case 'radio':
+      return <FaBroadcastTower style={{ color: '#ffc107' }} title="Radio" />;
+    case 'maintenance':
+      return <FaWrench style={{ color: '#dc3545' }} title="Maintenance" />;
+    default:
+      return <FaCompass style={{ color: '#6c757d' }} title="Unknown" />;
+  }
+}
+
 function buildAmendChains(entries) {
   // Map datetime -> entry
   const byId = {};
@@ -81,11 +96,23 @@ function Logbook(props) {
 
   return (
     <div>
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}><div style={{fontWeight:'bold'}}>Logbook</div><Button color="primary" onClick={props.addEntry}>Add entry</Button></div>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+        <div style={{fontWeight:'bold'}}>
+          Logbook
+          {props.userRole && (
+            <span style={{ fontSize: '0.8em', color: '#6c757d', marginLeft: '10px' }}>
+              ({props.userRole} - {props.canWrite ? 'Read/Write' : 'Read Only'})
+            </span>
+          )}
+        </div>
+        {props.addEntry && (
+          <Button color="primary" onClick={props.addEntry}>Add entry</Button>
+        )}
+      </div>
       <Table striped hover responsive>
         <thead>
           <tr>
-            <th></th>
+            <th style={{ textAlign: 'center', width: '40px' }}>Type</th>
             <th>Time</th>
             <th>Course</th>
             <th>Speed</th>
@@ -102,9 +129,9 @@ function Logbook(props) {
         {chains.map((chain, idx) => {
           const last = chain[chain.length - 1];
           return <React.Fragment key={last.datetime}>
-            <tr onClick={() => props.editEntry(last)}>
-              <td>
-                
+            <tr onClick={props.editEntry ? () => props.editEntry(last) : undefined} style={{ cursor: props.editEntry ? 'pointer' : 'default' }}>
+              <td style={{ textAlign: 'center', width: '40px' }}>
+                {getCategoryIcon(last.category)}
               </td>
               <td>{last.date.toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</td>
               <td>{getCourse(last)}</td>
@@ -126,7 +153,9 @@ function Logbook(props) {
             </tr>
             {chain.length > 1 && chain.slice(0, -1).map((e, i) => (
               <tr key={e.datetime} style={{ background: '#f6f6f6', fontSize: '0.95em' }}>
-                <td></td>
+                <td style={{ textAlign: 'center', width: '40px' }}>
+                  {getCategoryIcon(e.category)}
+                </td>
                 <td colSpan={11} style={{ paddingLeft: 48, borderLeft: '3px solid #bbb' }}>
                   <span style={{ color: '#888' }}>
                     <b>{e.date.toLocaleString('en-GB', { timeZone: props.displayTimeZone })}</b> — {e.text}

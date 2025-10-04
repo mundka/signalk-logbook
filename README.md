@@ -1,12 +1,34 @@
 Semi-automatic logbook for Signal K
 ===================================
 
-Status: ready for the first test runs
+Status: Production ready with advanced features
 
 This application provides both a server-side plugin and the user interface for maintaining semi-automatic logbooks with [Signal K](https://signalk.org). Just like traditional logbooks, you can write an entry at any time. However, there are several things that are done automatically for you:
 
 * Entries written when starting/ending a trip (requires [signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate) plugin)
 * When underway, an entry is created every hour recording the current conditions
+
+## New Features in v1.1.0
+
+### 🚢 **Crew Access Control System**
+- **Role-based authentication** with proper maritime hierarchy
+- **6 crew positions**: Captain, Chief Officer, Officer, Engineer, Bosun, Crew
+- **Granular permissions** for entry creation, editing, and deletion
+- **Tab access control** for Service and Reports sections
+- **Visual role indicators** in the interface
+
+### 📊 **Estonian Maritime Logbook Format**
+- **Official Estonian Maritime Authority** approved format
+- **Comprehensive reporting** with weather, navigation, and crew data
+- **Dynamic data integration** from ship's sensors and logbook entries
+- **Professional maritime documentation** standards
+- **Multi-section reports** including fuel consumption and tank monitoring
+
+### 🎯 **Enhanced User Interface**
+- **Category icons** for different entry types (navigation, engine, radio, maintenance)
+- **Improved entry editor** with category buttons
+- **Role-based UI elements** that show/hide based on permissions
+- **User information display** with current role and access level
 
 ## User interface
 
@@ -105,6 +127,23 @@ Some additional ideas for the future:
 
 ## Changes
 
+* 1.1.0 (2025-10-04)
+  - **Major Feature Release**: Crew Access Control System
+  - Added role-based authentication with 6 maritime crew positions (Captain, Chief Officer, Officer, Engineer, Bosun, Crew)
+  - Implemented granular permissions for entry creation, editing, and deletion
+  - Added tab access control for Service and Reports sections
+  - **Estonian Maritime Logbook Format**: Official Estonian Maritime Authority approved reporting format
+  - Added comprehensive reporting with weather, navigation, and crew data integration
+  - Enhanced Reports tab with dynamic data from ship's sensors and logbook entries
+  - Added professional maritime documentation standards compliance
+  - **UI Enhancements**: Category icons for entry types (navigation, engine, radio, maintenance)
+  - Improved entry editor with category selection buttons
+  - Added role-based UI elements that show/hide based on user permissions
+  - Added user information display with current role and access level
+  - Removed Timeline tab (deemed irrelevant for maritime operations)
+  - Fixed navigation entry position data saving issues
+  - Enhanced automatic entry system with configurable intervals
+  - Added comprehensive crew access control documentation (README_CREW_ACCESS.md)
 * 0.7.2 (2024-05-13)
   - Fix issue storing entries when `navigation.position` includes altitude
 * 0.7.1 (2024-04-23)

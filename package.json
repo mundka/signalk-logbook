@@ -1,6 +1,7 @@
 {
   "name": "signalk-logbook",
-  "description": "Semi-automatic electronic logbook for Signal K",
+  "version": "1.1.0",
+  "description": "Semi-automatic electronic logbook for Signal K with crew access control and Estonian Maritime format",
   "main": "plugin/index.js",
   "scripts": {
     "prepublishOnly": "npm run build",
